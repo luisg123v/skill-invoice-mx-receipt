@@ -1,2 +1,14 @@
+[dependency-groups]
+test = ["playwright", "pytest"]
+
 [tool.black]
 line-length = 119
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    # summarize everything that did not plainly pass
+    "-ra",
+    # tracebacks without the surrounding context
+    "--tb=short",
+]

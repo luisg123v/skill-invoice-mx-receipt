@@ -25,6 +25,15 @@ The scripts need Python 3.11 or later and Playwright with its Chromium.
 [Running the scripts](SKILL.md#running-the-scripts)
 explains how to install them with `uv` or `pipx`.
 
+## Tests
+
+The tests cover what doesn't need a browser, such as the configuration and the email requests.
+Run them with
+[uv](https://docs.astral.sh/uv/),
+which installs their dependencies in its own environment:
+
+    uv run --group test pytest
+
 ## License
 
 [MIT](LICENSE)
