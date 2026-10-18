@@ -1,0 +1,56 @@
+# Copy to ~/.config/invoice-mx-receipt/config.toml, or set the INVOICE_MX_RECEIPT_CONFIG environment
+# variable to this file's path.
+
+# Where the portals send the CFDI.
+email = "facturas@example.com"
+# Some portals email links to the XML instead of attaching it. If the address above only takes
+# attachments (an accounting system's alias, for example), set one that a person reads.
+email_links = ""
+
+# Screenshots and files of each receipt.
+evidence_dir = "~/.local/share/invoice-mx-receipt"
+
+# Some portals block IPs outside Mexico. If you run this on a server abroad, set a proxy with an IP
+# in Mexico, and optionally the command that opens it when nothing listens on its port. For
+# example, an SSH SOCKS tunnel to a machine at home:
+#   proxy = "socks5://127.0.0.1:1080"
+#   proxy_command = ["ssh", "-f", "-N", "-D", "127.0.0.1:1080", "-o", "ExitOnForwardFailure=yes",
+#                    "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "user@home.example.com"]
+proxy = ""
+proxy_command = []
+
+# Constancia de Situación Fiscal (PDF), which some small stores ask for.
+csf = ""
+
+# The receiver, as in the Constancia de Situación Fiscal. Case doesn't matter, but accents do.
+[receiver]
+rfc = "XAXX010101000"
+first_names = "NOMBRE"
+last_names = "APELLIDO PATERNO APELLIDO MATERNO"
+postal_code = "00000"
+# Every regime in the Constancia, the preferred one first. Each invoice gets the first one that
+# its Uso CFDI admits; for example, with ["626", "614"], D01 gets 614 because RESICO doesn't admit
+# personal deductions.
+regimes = ["626"]
+
+# Which Uso CFDI to give each kind of purchase. The agent asks for anything not listed here.
+[cfdi_usages]
+# Anything an office or a workplace can use is an expense, and a restaurant meal can be a
+# business meal. Groceries for the home (meat, bread, cheese) aren't.
+"restaurant meals and coffee" = "G03"
+"office supplies, computer equipment (monitor, keyboard, cables, headphones)" = "G03"
+"snacks, soft drinks, cleaning products" = "G03"
+"household groceries (meat, bread, cheese)" = "S01"
+"medical, dental, hospital" = "D01"
+
+# Asking a store with no portal for the invoice.
+[request]
+# Before sending an email or a WhatsApp message on your behalf, the agent shows it and waits for
+# your yes. Set to false to let it send them on its own.
+confirm_before_sending = true
+sender = "Nombre Apellido <yo@example.com>"
+signature = ["Saludos", "Nombre Apellido"]
+# Command that sends the email, read on stdin. Empty: the agent gives you the email to send.
+sendmail = []
+# Command that keeps a copy of a sent email, read on stdin (sendmail keeps none). Optional.
+sent_copy_command = []
