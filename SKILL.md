@@ -136,7 +136,7 @@ Run any script with `--help` for its arguments.
 | ICR (Carl's Jr and other restaurants) | [`reference/icr.md`](reference/icr.md) | none yet | no |
 | iShop / Mixup | [`reference/mixup.md`](reference/mixup.md) | none yet (steps in the reference) | yes |
 | Miniso (Diverza portal) | [`reference/miniso.md`](reference/miniso.md) | [`miniso.py`](scripts/miniso.py) | no |
-| OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) (first step only) | yes |
+| OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) | yes |
 | Restaurants on Soft Restaurant, with two portals (mefacturo.com and mefacturo.mx links) | [`reference/soft-restaurant.md`](reference/soft-restaurant.md) | [`soft_restaurant.py`](scripts/soft_restaurant.py) (mefacturo.com only) | no |
 | Walmart | [`reference/walmart.md`](reference/walmart.md) | [`walmart.py`](scripts/walmart.py) | no |
 

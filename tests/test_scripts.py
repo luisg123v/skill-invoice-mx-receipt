@@ -157,7 +157,7 @@ def test_portal_steps(import_script, module, class_name):
     numbers = [name.split("_")[1] for name in fill + submit]
     assert all(len(number) == 2 for number in numbers)
     assert len(set(fill)) == len({name.split("_")[1] for name in fill})
-    assert portal.submits() == (module != "oxxo")
+    assert portal.submits()
 
 
 def request_args(**values):

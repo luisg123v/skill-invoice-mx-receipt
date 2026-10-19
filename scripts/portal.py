@@ -30,6 +30,8 @@ class InvoicePortal:
     url = ""
     # The portal blocks IPs outside Mexico, so browse through the configured proxy.
     blocks_foreign_ips = False
+    # Portals don't always write all the accents, such as "Adquisición de mercancias".
+    accents = str.maketrans("áéíóúü", "aeiouu")
 
     def __init__(self, args, config):
         self.args = args
@@ -84,6 +86,10 @@ class InvoicePortal:
         """Print the value of each field, to compare it with the receipt and the receiver."""
         for selector in selectors:
             print("%-*s %r" % (width, selector, self.page.input_value(selector)))
+
+    def comparable_text(self, text):
+        """Return a text in lowercase and without accents, to compare it with the portal's."""
+        return text.strip().lower().translate(self.accents)
 
     def select_offered(self, selector, value, what):
         """Select a value, stopping when the portal doesn't offer it.
