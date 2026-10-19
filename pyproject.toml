@@ -1,5 +1,9 @@
 [dependency-groups]
-test = ["playwright", "pytest"]
+test = [
+    "playwright",
+    "pytest",
+    "tomli; python_version < '3.11'",
+]
 
 [tool.black]
 line-length = 119

@@ -1,6 +1,6 @@
 # /// script
-# requires-python = ">=3.11"
-# dependencies = ["playwright"]
+# requires-python = ">=3.10"
+# dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
 """Validate an OXXO receipt on its invoicing portal.
 

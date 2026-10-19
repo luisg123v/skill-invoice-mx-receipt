@@ -21,7 +21,7 @@ Then copy
 to `~/.config/invoice-mx-receipt/config.toml` and fill it with your tax data, as it appears in
 your Constancia de Situación Fiscal. The repository has no personal data; it is all in that file.
 
-The scripts need Python 3.11 or later and Playwright with its Chromium.
+The scripts need Python 3.10 or later and Playwright with its Chromium.
 [Running the scripts](SKILL.md#running-the-scripts)
 explains how to install them with `uv` or `pipx`.
 

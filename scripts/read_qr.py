@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.10"
 # dependencies = ["pillow", "zxing-cpp"]
 # ///
 """Print the content of every QR or barcode in a photo of a receipt.

@@ -109,9 +109,9 @@ it, because a portal only issues what the receipt and the configuration say.
 
 ## Running the scripts
 
-The scripts are in `scripts/` and need Python 3.11 or later. The portal scripts need Playwright
-with its Chromium, and `read_qr.py` needs `pillow` and `zxing-cpp`. Run any script with `--help`
-for its arguments.
+The scripts are in `scripts/` and need Python 3.10 or later; on 3.10 they also need `tomli`. The
+portal scripts need Playwright with its Chromium, and `read_qr.py` needs `pillow` and `zxing-cpp`.
+Run any script with `--help` for its arguments.
 
 - With `uv`, `uv run scripts/<script>.py` installs what the script declares at its top.
 - Without it, install them with pipx, which keeps them in their own environment, and run the
@@ -121,6 +121,9 @@ for its arguments.
   pipx install playwright
   pipx inject playwright pillow zxing-cpp
   playwright install chromium
+
+  # Only on Python 3.10, which doesn't have tomllib:
+  pipx inject playwright tomli
   ```
 
 ## Portal index

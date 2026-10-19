@@ -9,10 +9,15 @@ import os
 import re
 import socket
 import subprocess
-import tomllib
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 from urllib.parse import urlsplit
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    # Python 3.10 doesn't have tomllib; tomli is the same parser as a separate package.
+    import tomli as tomllib
 
 DEFAULT_CONFIG = Path("~/.config/invoice-mx-receipt/config.toml")
 DEFAULT_EVIDENCE = Path("~/.local/share/invoice-mx-receipt")

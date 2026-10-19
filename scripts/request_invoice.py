@@ -1,5 +1,6 @@
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.10"
+# dependencies = ["tomli; python_version < '3.11'"]
 # ///
 """Ask a store with no portal for the invoice, by email or WhatsApp.
 

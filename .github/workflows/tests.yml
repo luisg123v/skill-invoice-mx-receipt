@@ -8,10 +8,14 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The oldest Python the scripts support and the newest release.
+        python-version: ["3.10", "3.x"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - run: python -m pip install --group test
       - run: pytest

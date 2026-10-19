@@ -1,6 +1,6 @@
 # /// script
-# requires-python = ">=3.11"
-# dependencies = ["playwright"]
+# requires-python = ">=3.10"
+# dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
 """Invoice a receipt of Carlscol (Carl's Jr in Colima and Manzanillo) on carlscol.libellum.com.mx.
 

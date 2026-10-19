@@ -1,6 +1,6 @@
 # /// script
-# requires-python = ">=3.11"
-# dependencies = ["playwright"]
+# requires-python = ">=3.10"
+# dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
 """Invoice an Alsea receipt (Starbucks and the other Alsea brands) on alsea.interfactura.com.
 
