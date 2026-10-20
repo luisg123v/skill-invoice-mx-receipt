@@ -19,6 +19,7 @@ PORTALS = {
     "alsea": "Alsea",
     "carlscol": "Carlscol",
     "farmacias_guadalajara": "FarmaciasGuadalajara",
+    "farmacias_similares": "FarmaciasSimilares",
     "miniso": "Miniso",
     "oxxo": "Oxxo",
     "soft_restaurant": "SoftRestaurant",

@@ -133,6 +133,7 @@ Run any script with `--help` for its arguments.
 | Alsea: Starbucks, Domino's, Burger King, Chili's, Vips, ... | [`reference/alsea.md`](reference/alsea.md) | [`alsea.py`](scripts/alsea.py) | no |
 | Carlscol (Carl's Jr in Colima and Manzanillo) | [`reference/carlscol.md`](reference/carlscol.md) | [`carlscol.py`](scripts/carlscol.py) | no |
 | Farmacias Guadalajara | [`reference/farmacias-guadalajara.md`](reference/farmacias-guadalajara.md) | [`farmacias_guadalajara.py`](scripts/farmacias_guadalajara.py) | yes |
+| Farmacias Similares (franchises invoiced on Soltec) | [`reference/farmacias-similares.md`](reference/farmacias-similares.md) | [`farmacias_similares.py`](scripts/farmacias_similares.py) | no |
 | ICR (Carl's Jr and other restaurants) | [`reference/icr.md`](reference/icr.md) | none yet | no |
 | iShop / Mixup | [`reference/mixup.md`](reference/mixup.md) | none yet (steps in the reference) | yes |
 | Miniso (Diverza portal) | [`reference/miniso.md`](reference/miniso.md) | [`miniso.py`](scripts/miniso.py) | no |
