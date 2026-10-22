@@ -20,6 +20,7 @@ PORTALS = {
     "carlscol": "Carlscol",
     "farmacias_guadalajara": "FarmaciasGuadalajara",
     "farmacias_similares": "FarmaciasSimilares",
+    "kiosko": "Kiosko",
     "miniso": "Miniso",
     "oxxo": "Oxxo",
     "soft_restaurant": "SoftRestaurant",
@@ -159,6 +160,14 @@ def test_portal_steps(import_script, module, class_name):
     assert all(len(number) == 2 for number in numbers)
     assert len(set(fill)) == len({name.split("_")[1] for name in fill})
     assert portal.submits()
+
+
+def test_kiosko_receipts_limit(import_script):
+    parser = argparse.ArgumentParser()
+    import_script("kiosko").Kiosko.add_arguments(parser)
+    assert len(parser.parse_args(["--referencia", "1"] * 10).referencia) == 10
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--referencia", "1"] * 11)
 
 
 def request_args(**values):

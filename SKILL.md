@@ -136,6 +136,7 @@ Run any script with `--help` for its arguments.
 | Farmacias Similares (franchises invoiced on Soltec) | [`reference/farmacias-similares.md`](reference/farmacias-similares.md) | [`farmacias_similares.py`](scripts/farmacias_similares.py) | no |
 | ICR (Carl's Jr and other restaurants) | [`reference/icr.md`](reference/icr.md) | none yet | no |
 | iShop / Mixup | [`reference/mixup.md`](reference/mixup.md) | none yet (steps in the reference) | yes |
+| Kiosko | [`reference/kiosko.md`](reference/kiosko.md) | [`kiosko.py`](scripts/kiosko.py) | no |
 | Miniso (Diverza portal) | [`reference/miniso.md`](reference/miniso.md) | [`miniso.py`](scripts/miniso.py) | no |
 | OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) | yes |
 | Restaurants on Soft Restaurant, with two portals (mefacturo.com and mefacturo.mx links) | [`reference/soft-restaurant.md`](reference/soft-restaurant.md) | [`soft_restaurant.py`](scripts/soft_restaurant.py) (mefacturo.com only) | no |
