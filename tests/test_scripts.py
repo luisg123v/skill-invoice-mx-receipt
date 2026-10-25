@@ -242,3 +242,15 @@ def test_build_email_csf_needs_configuration(import_script, config):
     args = request_args(csf=True)
     with pytest.raises(SystemExit, match="csf"):
         request.build_email(config, args, request.receipt_data(args), request.billing_data(config, "S01"))
+
+
+def test_farmacias_similares_receiver_rfc(import_script):
+    receiver_rfc = import_script("farmacias_similares").FarmaciasSimilares.receiver_rfc
+    cfdi = (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        b'<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0">'
+        b'<cfdi:Emisor Rfc="AAA010101AAA"/><cfdi:Receptor Rfc="PEMJ800101AB1"/>'
+        b"</cfdi:Comprobante>"
+    )
+    assert receiver_rfc(cfdi) == "PEMJ800101AB1"
+    assert receiver_rfc(cfdi.replace(b"<cfdi:Receptor", b"<cfdi:Otro")) is None

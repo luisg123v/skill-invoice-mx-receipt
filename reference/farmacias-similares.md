@@ -50,6 +50,7 @@ The receipt also has "Ticket:" with a long identifier in hexadecimal, which the 
 | Message | Meaning |
 |---|---|
 | `Ticket procesado correctamente Se ha enviado la factura a su correo electrónico` | Issued. The status page offers the XML and the PDF. It shows again for a receipt already invoiced, right after its barcode. |
+| `Captura el código de barras como esta en tu ticket`, below the barcode | The barcode's format is wrong, for example a changed digit; the last digit is a check digit. The script stops. |
 | `Estamos procesando su factura Su factura está en proceso de generación, la recibirá por mail en un maximo de 48 horas` | The portal didn't find the receipt, for example a wrong barcode. It says that the reason arrives by email, with a link to fix the data. |
 
 ## Limits
@@ -61,5 +62,25 @@ The receipt also has "Ticket:" with a long identifier in hexadecimal, which the 
 
 ## How the CFDI arrives
 
-By email to the address given, according to the portal. The status page of the receipt (enter the
-branch and the barcode again) also has links to download the XML and the PDF.
+The portal says it sends the CFDI by email, but for the first receipt invoiced with the script the
+email never arrived. The status page of the receipt has a form to send it again, and with it the
+email arrived within seconds. So if the email doesn't arrive within a few minutes, run the script
+again with `--resend`. It enters the branch and the barcode, which open the status page of a receipt
+already invoiced, and sends the CFDI to `--email` with that form.
+
+On the status page:
+
+- The "XML" and "PDF" links download the files without signing in. The script saves them in the
+  evidence folder, after issuing the invoice and whenever it opens the page of a receipt already
+  invoiced.
+- The page opens with only the branch and the barcode, so a misread barcode could open another
+  person's receipt. The script keeps the files only when the XML is issued to the receiver, and
+  stops otherwise.
+- The form comes filled in with the email given when invoicing, and the page asks to download the
+  XML and the PDF before sending them.
+- After "Enviar", the page says "Ya se envío con anterioridad los documentos a la cuenta de correo
+  de ...", as if nothing was sent, but the email arrives within seconds.
+- The form can be used only once. After that, the page shows only that message, and `--resend`
+  stops saying that the form is gone.
+- The email comes from `facturas@rnaconsultores.net` ("Soltec Consultores"), with the XML and the
+  PDF attached.

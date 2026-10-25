@@ -19,6 +19,10 @@ class PortalError(Exception):
     """The portal answered something that stops the run."""
 
 
+class PortalDone(Exception):
+    """The run ends early because there is nothing left to do, such as a receipt already invoiced."""
+
+
 class InvoicePortal:
     """Base class of a portal script.
 
@@ -150,6 +154,9 @@ class InvoicePortal:
                     print("dry run: not submitted")
                 elif self.submits():
                     self.run_steps("submit_")
+            except PortalDone as done:
+                print("DONE: %s" % done)
+                print("screenshot: %s" % self.screenshot("done"))
             except PortalError as error:
                 print("ABORT: %s" % error)
                 print("screenshot: %s" % self.screenshot("abort"))

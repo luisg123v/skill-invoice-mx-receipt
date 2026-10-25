@@ -8,12 +8,14 @@ The franchises' portals that the script knows are in `providers`; see reference/
 
 Usage:
     farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 --forma 04 --uso S01 [--send]
+    farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 --forma 04 --uso S01 --resend
 """
 
 import sys
 from urllib.parse import urlparse
+from xml.etree import ElementTree
 
-from portal import InvoicePortal, PortalError
+from portal import InvoicePortal, PortalDone, PortalError
 
 
 class FarmaciasSimilares(InvoicePortal):
@@ -31,6 +33,11 @@ class FarmaciasSimilares(InvoicePortal):
         parser.add_argument("--codigo", required=True, help="the digits under the barcode")
         parser.add_argument("--total", required=True, help="Total M.N., with cents, e.g. 100.00")
         parser.add_argument("--forma", required=True, help="Forma de pago code, e.g. 04 for a credit card")
+        parser.add_argument(
+            "--resend",
+            action="store_true",
+            help="for a receipt already invoiced, have the portal email the CFDI again, to --email",
+        )
 
     def __init__(self, args, config):
         super().__init__(args, config)
@@ -97,7 +104,15 @@ class FarmaciasSimilares(InvoicePortal):
         )
         # A receipt already invoiced goes to its status page, with links to download the XML and the PDF.
         if "/ticket_en_datos_ticket/" in self.page.url:
-            raise PortalError("the receipt is already invoiced: %s" % self.text())
+            print("status page: %s" % self.text()[:500])
+            self.soltec_download()
+            if not self.args.resend:
+                raise PortalError("the receipt is already invoiced; pass --resend to have the CFDI emailed again")
+            self.soltec_resend()
+            raise PortalDone("the receipt is already invoiced; the portal was asked to email the CFDI again")
+        # The portal checks the barcode's format and writes below the field whether it is right.
+        if "CodigoBarras correcto" not in self.text("form"):
+            raise PortalError("the portal didn't accept the barcode: %s" % self.text("form")[:400])
         self.soltec_type_fields([("total", self.args.total)])
         self.show(["input[name=sucursal]", "input[name=codigoBarras]", "input[name=total]"], width=30)
 
@@ -150,6 +165,52 @@ class FarmaciasSimilares(InvoicePortal):
         self.page.wait_for_load_state("networkidle", timeout=90000)
         self.page.wait_for_timeout(8000)
         print("RESULT: %s" % self.text()[:1500])
+        # The answer is the receipt's status page.
+        if "/ticket_en_datos_ticket/" in self.page.url:
+            self.soltec_download()
+
+    @staticmethod
+    def receiver_rfc(xml):
+        """Return the receiver's RFC of a CFDI 4.0."""
+        receiver = ElementTree.fromstring(xml).find("{http://www.sat.gob.mx/cfd/4}Receptor")
+        return receiver.get("Rfc") if receiver is not None else None
+
+    def soltec_download(self):
+        """Save the XML and the PDF from the receipt's status page, which needs no sign-in.
+
+        The page opens with only the branch and the barcode, so a misread barcode can open another
+        person's receipt. The files are kept only when the XML is issued to the receiver.
+        """
+        paths = {}
+        for label in ("XML", "PDF"):
+            with self.page.expect_download(timeout=60000) as download:
+                self.page.get_by_role("link", name=label, exact=True).click()
+            paths[label] = self.out / download.value.suggested_filename
+            download.value.save_as(paths[label])
+        if self.receiver_rfc(paths["XML"].read_bytes()) != self.receiver.rfc:
+            for path in paths.values():
+                path.unlink()
+            raise PortalError("the receipt was invoiced to another RFC; check the barcode")
+        for label, path in paths.items():
+            print("%s: %s" % (label, path))
+
+    def soltec_resend(self):
+        """Send the CFDI again with the form of the status page.
+
+        The page asks to download the XML and the PDF first. The form comes filled in with the email
+        given when invoicing, so the script writes --email in it.
+        """
+        form = self.page.locator("form[action*=enviarCorreoFacturaDatosTicket]")
+        # The form is gone once it has been used, and the page only says where the CFDI was sent.
+        if not form.count():
+            raise PortalError("the status page has no form to send the CFDI again: %s" % self.text()[:800])
+        form.locator("input[name=correoPara]").fill(self.args.email)
+        form.locator("button[type=submit]").click()
+        self.page.wait_for_load_state("networkidle", timeout=60000)
+        self.page.wait_for_timeout(3000)
+        # It says the documents were already sent before ("Ya se envío con anterioridad"), but the
+        # email arrives within seconds.
+        print("RESEND to %s: %s" % (self.args.email, self.text()[:800]))
 
 
 if __name__ == "__main__":
