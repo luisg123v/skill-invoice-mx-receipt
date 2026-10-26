@@ -21,6 +21,7 @@ PORTALS = {
     "farmacias_guadalajara": "FarmaciasGuadalajara",
     "farmacias_similares": "FarmaciasSimilares",
     "kiosko": "Kiosko",
+    "liverpool": "Liverpool",
     "miniso": "Miniso",
     "oxxo": "Oxxo",
     "soft_restaurant": "SoftRestaurant",
@@ -176,6 +177,20 @@ def test_kiosko_receipts_limit(import_script):
     assert len(parser.parse_args(["--referencia", "1"] * 10).referencia) == 10
     with pytest.raises(SystemExit):
         parser.parse_args(["--referencia", "1"] * 11)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [("ABCDE FGH1J KLMNO PQRST", "ABCDEFGH1JKLMNOPQRST"), ("abcdefgh1jklmnopqrst", "ABCDEFGH1JKLMNOPQRST")],
+)
+def test_liverpool_billing_code(import_script, value, expected):
+    assert import_script("liverpool").billing_code(value) == expected
+
+
+@pytest.mark.parametrize("value", ["ABCDE FGH1J KLMNO", "ABCDE FGH1J KLMNO PQRS-"])
+def test_liverpool_billing_code_invalid(import_script, value):
+    with pytest.raises(argparse.ArgumentTypeError):
+        import_script("liverpool").billing_code(value)
 
 
 def request_args(**values):
