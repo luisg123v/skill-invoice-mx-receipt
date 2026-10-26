@@ -9,7 +9,7 @@ import os
 import re
 import socket
 import subprocess
-from dataclasses import dataclass, field, fields
+from dataclasses import MISSING, dataclass, field, fields
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -90,10 +90,17 @@ CFDI_USAGES = {
 class Receiver:
     rfc: str
     first_names: str
-    last_names: str
+    paternal_last_name: str
     postal_code: str
     # Every regime in the Constancia de Situación Fiscal, the preferred one first.
     regimes: list
+    # Some people have only one last name.
+    maternal_last_name: str = ""
+
+    @property
+    def last_names(self):
+        """Return both last names, for the portals that ask for them in one field."""
+        return " ".join(name for name in (self.paternal_last_name, self.maternal_last_name) if name)
 
     @property
     def name(self):
@@ -137,7 +144,8 @@ class Config:
         with path.open("rb") as config_file:
             data = tomllib.load(config_file)
         receiver = data.get("receiver", {})
-        missing = ["receiver." + key for key in (item.name for item in fields(Receiver)) if not receiver.get(key)]
+        required = [item.name for item in fields(Receiver) if item.default is MISSING]
+        missing = ["receiver." + key for key in required if not receiver.get(key)]
         if not data.get("email"):
             missing.append("email")
         if missing:

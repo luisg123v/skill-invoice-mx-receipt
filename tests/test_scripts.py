@@ -34,7 +34,8 @@ evidence_dir = "{evidence}"
 [receiver]
 rfc = "PEMJ800101AB1"
 first_names = "JUAN"
-last_names = "PEREZ MARTINEZ"
+paternal_last_name = "PEREZ"
+maternal_last_name = "MARTINEZ"
 postal_code = "01000"
 regimes = ["626", "614"]
 
@@ -84,6 +85,13 @@ def test_load_config_missing_fields(import_script, tmp_path):
     path.write_text('[receiver]\nrfc = "PEMJ800101AB1"\n')
     with pytest.raises(SystemExit, match="receiver.first_names.*receiver.regimes, email"):
         import_script("config").Config.load(path)
+
+
+def test_load_config_one_last_name(import_script, config_path):
+    config_path.write_text(config_path.read_text().replace('maternal_last_name = "MARTINEZ"\n', ""))
+    receiver = import_script("config").Config.load(config_path).receiver
+    assert receiver.last_names == "PEREZ"
+    assert receiver.name == "JUAN PEREZ"
 
 
 def test_load_config_unknown_regime(import_script, config_path):

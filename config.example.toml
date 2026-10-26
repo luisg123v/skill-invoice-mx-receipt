@@ -26,7 +26,10 @@ csf = ""
 [receiver]
 rfc = "XAXX010101000"
 first_names = "NOMBRE"
-last_names = "APELLIDO PATERNO APELLIDO MATERNO"
+# Some portals ask for each last name in its own field. Leave the maternal one empty if you have
+# only one.
+paternal_last_name = "APELLIDO PATERNO"
+maternal_last_name = "APELLIDO MATERNO"
 postal_code = "00000"
 # Every regime in the Constancia, the preferred one first. Each invoice gets the first one that
 # its Uso CFDI admits; for example, with ["626", "614"], D01 gets 614 because RESICO doesn't admit
