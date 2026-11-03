@@ -2,13 +2,15 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
-"""Invoice a Farmacias Guadalajara receipt on www.movil.farmaciasguadalajara.com/facturacion.
+"""Invoice a Farmacias Guadalajara receipt on
+www.movil.farmaciasguadalajara.com/facturacion.
 
-With --send it also saves the CFDI's XML and PDF that the portal's service returns; the portal
-emails them too.
+With --send it also saves the CFDI's XML and PDF that the portal's service returns; the
+portal emails them too.
 
 Usage:
-    farmacias_guadalajara.py --qr 'https://www.movil.farmaciasguadalajara.com/facturacion/?folio=...' \
+    farmacias_guadalajara.py \
+        --qr 'https://www.movil.farmaciasguadalajara.com/facturacion/?folio=...' \
         --uso G03 [--send]
 """
 
@@ -40,7 +42,8 @@ class FarmaciasGuadalajara(InvoicePortal):
     def add_arguments(cls, parser):
         parser.add_argument(
             "--qr",
-            help="URL in the receipt's QR (it has folio, caja, ticket, fecha and tienda)",
+            help="URL in the receipt's QR (it has folio, caja, ticket, fecha and "
+            "tienda)",
         )
         parser.add_argument(
             "--folio", help="FOLIO FACTURA, e.g. 123456-123456-123456 (without --qr)"
@@ -83,7 +86,7 @@ class FarmaciasGuadalajara(InvoicePortal):
         return self.text(".swal2-popup")
 
     def keep_invoice_answer(self, response):
-        """Keep the answer of the service that issues the invoice, which has the XML and the PDF."""
+        """Keep the answer of the service that issues the invoice: the XML and PDF."""
         if "generateInvoice" in (response.request.post_data_buffer or b"").decode(
             "utf-8", "replace"
         ):
@@ -120,7 +123,8 @@ class FarmaciasGuadalajara(InvoicePortal):
         self.page.wait_for_timeout(2000)
 
     def fill_02_receiver(self):
-        # Typing the RFC loads the data the portal keeps for it (name, CP, regime, uso, email).
+        # Typing the RFC loads the data the portal keeps for it (name, CP, regime, uso,
+        # email).
         self.page.fill("#rfc", self.receiver.rfc)
         self.page.press("#rfc", "Tab")
         self.page.wait_for_timeout(5000)
@@ -143,7 +147,8 @@ class FarmaciasGuadalajara(InvoicePortal):
         self.page.click(".swal2-confirm")
         self.page.wait_for_function(
             "() => !document.querySelector('.swal2-popup')"
-            " || !/seguro que quiere facturar/.test(document.querySelector('.swal2-popup').innerText)",
+            " || !/seguro que quiere facturar/"
+            ".test(document.querySelector('.swal2-popup').innerText)",
             timeout=120000,
         )
         self.page.wait_for_selector(".swal2-popup", timeout=120000)

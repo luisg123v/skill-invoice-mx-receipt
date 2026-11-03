@@ -4,14 +4,17 @@
 # ///
 """Ask a store with no portal for the invoice, by email or WhatsApp.
 
-Without --send it prints the email and saves it as .eml in the receipt's evidence folder; with
---send it also sends it with the `sendmail` command of the configuration. With --whatsapp instead
-of --to, it prints a short message and a wa.me link that opens the chat with it filled in.
+Without --send it prints the email and saves it as .eml in the receipt's evidence
+folder; with --send it also sends it with the `sendmail` command of the configuration.
+With --whatsapp instead of --to, it prints a short message and a wa.me link that opens
+the chat with it filled in.
 
 Usage:
-    request_invoice.py --to tienda@example.com --fecha 2026-10-23 --importe 82.00 --uso S01 \
-        --image receipt.jpg [--ref 12345] [--field "Folio=123456"] [--csf] [--send]
-    request_invoice.py --whatsapp 3312345678 --fecha 2026-10-23 --importe 82.00 --uso S01
+    request_invoice.py --to tienda@example.com --fecha 2026-10-23 --importe 82.00 \
+        --uso S01 --image receipt.jpg [--ref 12345] [--field "Folio=123456"] [--csf] \
+        [--send]
+    request_invoice.py --whatsapp 3312345678 --fecha 2026-10-23 --importe 82.00 \
+        --uso S01
 """
 
 import argparse
@@ -56,7 +59,10 @@ def billing_data(config, usage):
 
 
 def chat_message(receipt, billing):
-    """Return a short chat message: the request, then the data. The photo goes with it by hand."""
+    """Return a short chat message: the request, then the data.
+
+    The photo goes with it by hand.
+    """
     lines = [CHAT_REQUEST, "", "Datos del ticket:"]
     lines += ["- %s: %s" % item for item in receipt]
     lines += ["", "Datos para la factura:"]
@@ -221,8 +227,8 @@ def main():
         return 0
     if not config.sendmail:
         raise SystemExit(
-            "ABORT: sending needs request.sendmail in the configuration; send %s by hand"
-            % eml
+            "ABORT: sending needs request.sendmail in the configuration; send %s by "
+            "hand" % eml
         )
     subprocess.run(config.sendmail, input=bytes(msg), check=True)
     print("SENT, Message-ID %s" % msg["Message-ID"])

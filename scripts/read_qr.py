@@ -4,8 +4,8 @@
 # ///
 """Print the content of every QR or barcode in a photo of a receipt.
 
-Some receipts print a QR that opens the portal with the receipt's data already filled; passing
-that URL avoids misreading the numbers.
+Some receipts print a QR that opens the portal with the receipt's data already filled;
+passing that URL avoids misreading the numbers.
 
 Usage:
     read_qr.py photo.jpg

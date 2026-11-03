@@ -2,13 +2,17 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
-"""Invoice a receipt of Farmacias Similares on SimiFactura, which sends each franchise to its own portal.
+"""Invoice a receipt of Farmacias Similares on SimiFactura, which sends each franchise
+to its own portal.
 
-The franchises' portals that the script knows are in `providers`; see reference/farmacias-similares.md.
+The franchises' portals that the script knows are in `providers`; see
+reference/farmacias-similares.md.
 
 Usage:
-    farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 --forma 04 --uso S01 [--send]
-    farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 --forma 04 --uso S01 --resend
+    farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 \
+        --forma 04 --uso S01 [--send]
+    farmacias_similares.py --referencia FH0123 --codigo 0123456000012 --total 100.00 \
+        --forma 04 --uso S01 --resend
 """
 
 import sys
@@ -21,8 +25,8 @@ from portal import InvoicePortal, PortalDone, PortalError
 class FarmaciasSimilares(InvoicePortal):
     name = "farmacias_similares"
     url = "https://facturacion.gpupm.com/simifactura/portal"
-    # The host of each franchise portal, and the prefix of the methods that fill it: <prefix>_ticket,
-    # <prefix>_receiver, <prefix>_summary and <prefix>_invoice.
+    # The host of each franchise portal, and the prefix of the methods that fill it:
+    # <prefix>_ticket, <prefix>_receiver, <prefix>_summary and <prefix>_invoice.
     providers = {
         "facturasoltec.com": "soltec",
     }
@@ -48,7 +52,8 @@ class FarmaciasSimilares(InvoicePortal):
         parser.add_argument(
             "--resend",
             action="store_true",
-            help="for a receipt already invoiced, have the portal email the CFDI again, to --email",
+            help="for a receipt already invoiced, have the portal email the CFDI "
+            "again, to --email",
         )
 
     def __init__(self, args, config):
@@ -62,7 +67,8 @@ class FarmaciasSimilares(InvoicePortal):
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
         self.page.fill("#Referencia", self.args.referencia)
         self.page.click("button:has-text('Continuar')")
-        # A franchise's reference opens a confirmation before sending to the franchise's portal.
+        # A franchise's reference opens a confirmation before sending to the franchise's
+        # portal.
         self.page.wait_for_selector("#btnConfirmacion", state="visible", timeout=30000)
         pages_before = len(self.page.context.pages)
         self.page.click("#btnConfirmacion")
@@ -98,8 +104,8 @@ class FarmaciasSimilares(InvoicePortal):
     def soltec_type_fields(self, values):
         """Type each field and leave it.
 
-        The portal checks a field as it is typed and when it loses the focus, and only then loads the
-        next one.
+        The portal checks a field as it is typed and when it loses the focus, and only
+        then loads the next one.
         """
         for name, value in values:
             field = self.page.locator("input[name=%s]" % name)
@@ -109,27 +115,31 @@ class FarmaciasSimilares(InvoicePortal):
             self.page.wait_for_timeout(1500)
 
     def soltec_ticket(self):
-        # The branch is the same reference that SimiFactura asked for. Each field stays read-only until
-        # the one before it is checked.
+        # The branch is the same reference that SimiFactura asked for. Each field stays
+        # read-only until the one before it is checked.
         self.soltec_type_fields(
             [
                 ("sucursal", self.args.referencia),
                 ("codigoBarras", self.args.codigo),
             ]
         )
-        # A receipt already invoiced goes to its status page, with links to download the XML and the PDF.
+        # A receipt already invoiced goes to its status page, with links to download the
+        # XML and the PDF.
         if "/ticket_en_datos_ticket/" in self.page.url:
             print("status page: %s" % self.text()[:500])
             self.soltec_download()
             if not self.args.resend:
                 raise PortalError(
-                    "the receipt is already invoiced; pass --resend to have the CFDI emailed again"
+                    "the receipt is already invoiced; pass --resend to have the CFDI "
+                    "emailed again"
                 )
             self.soltec_resend()
             raise PortalDone(
-                "the receipt is already invoiced; the portal was asked to email the CFDI again"
+                "the receipt is already invoiced; the portal was asked to email the "
+                "CFDI again"
             )
-        # The portal checks the barcode's format and writes below the field whether it is right.
+        # The portal checks the barcode's format and writes below the field whether it
+        # is right.
         if "CodigoBarras correcto" not in self.text("form"):
             raise PortalError(
                 "the portal didn't accept the barcode: %s" % self.text("form")[:400]
@@ -178,7 +188,8 @@ class FarmaciasSimilares(InvoicePortal):
         print("checks: %s" % self.text("form")[:1500])
 
     def soltec_summary(self):
-        # This button only opens a summary to check; the summary's own button issues the invoice.
+        # This button only opens a summary to check; the summary's own button issues the
+        # invoice.
         self.page.click("button:has-text('Procesar factura v4.0')")
         summary = self.page.locator(".modal.show")
         summary.wait_for(state="visible", timeout=30000)
@@ -202,10 +213,12 @@ class FarmaciasSimilares(InvoicePortal):
         return receiver.get("Rfc") if receiver is not None else None
 
     def soltec_download(self):
-        """Save the XML and the PDF from the receipt's status page, which needs no sign-in.
+        """Save the XML and the PDF from the receipt's status page, which needs no
+        sign-in.
 
-        The page opens with only the branch and the barcode, so a misread barcode can open another
-        person's receipt. The files are kept only when the XML is issued to the receiver.
+        The page opens with only the branch and the barcode, so a misread barcode can
+        open another person's receipt. The files are kept only when the XML is issued to
+        the receiver.
         """
         paths = {}
         for label in ("XML", "PDF"):
@@ -225,11 +238,12 @@ class FarmaciasSimilares(InvoicePortal):
     def soltec_resend(self):
         """Send the CFDI again with the form of the status page.
 
-        The page asks to download the XML and the PDF first. The form comes filled in with the email
-        given when invoicing, so the script writes --email in it.
+        The page asks to download the XML and the PDF first. The form comes filled in
+        with the email given when invoicing, so the script writes --email in it.
         """
         form = self.page.locator("form[action*=enviarCorreoFacturaDatosTicket]")
-        # The form is gone once it has been used, and the page only says where the CFDI was sent.
+        # The form is gone once it has been used, and the page only says where the CFDI
+        # was sent.
         if not form.count():
             raise PortalError(
                 "the status page has no form to send the CFDI again: %s"
@@ -239,8 +253,8 @@ class FarmaciasSimilares(InvoicePortal):
         form.locator("button[type=submit]").click()
         self.page.wait_for_load_state("networkidle", timeout=60000)
         self.page.wait_for_timeout(3000)
-        # It says the documents were already sent before ("Ya se envío con anterioridad"), but the
-        # email arrives within seconds.
+        # It says the documents were already sent before ("Ya se envío con
+        # anterioridad"), but the email arrives within seconds.
         print("RESEND to %s: %s" % (self.args.email, self.text()[:800]))
 
 

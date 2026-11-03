@@ -1,10 +1,11 @@
 """Base class of the portal scripts.
 
-A portal script subclasses `InvoicePortal` and fills each step of the portal in its own method,
-named `fill_<NN>_<step>()`. The steps that issue the invoice are named `submit_<NN>_<step>()`. The
-base class opens the browser, prints the portal's dialogs, runs the steps in the order of their
-numbers with a screenshot after each one, and only runs the submit steps with `--send`, so a run
-without it never issues anything. `template.py` is the starting point for a new portal.
+A portal script subclasses `InvoicePortal` and fills each step of the portal in its own
+method, named `fill_<NN>_<step>()`. The steps that issue the invoice are named
+`submit_<NN>_<step>()`. The base class opens the browser, prints the portal's dialogs,
+runs the steps in the order of their numbers with a screenshot after each one, and only
+runs the submit steps with `--send`, so a run without it never issues anything.
+`template.py` is the starting point for a new portal.
 """
 
 import argparse
@@ -20,14 +21,14 @@ class PortalError(Exception):
 
 
 class PortalDone(Exception):
-    """The run ends early because there is nothing left to do, such as a receipt already invoiced."""
+    """The run ends early with nothing left to do, as for a receipt already invoiced."""
 
 
 class InvoicePortal:
     """Base class of a portal script.
 
-    A subclass sets `name` and `url`, adds the receipt's fields in `add_arguments()`, and implements
-    the step methods described in the module's docstring.
+    A subclass sets `name` and `url`, adds the receipt's fields in `add_arguments()`,
+    and implements the step methods described in the module's docstring.
     """
 
     name = ""
@@ -46,15 +47,16 @@ class InvoicePortal:
 
     @classmethod
     def add_arguments(cls, parser):
-        """Add the arguments of the fields that the portal asks for, usually the receipt's.
+        """Add the arguments of the fields that the portal asks for, usually the
+        receipt's.
 
-        A subclass overrides it to add them. The arguments that every portal has (`--uso`,
-        `--email`, `--send` and `--config`) are added by `main()`.
+        A subclass overrides it to add them. The arguments that every portal has
+        (`--uso`, `--email`, `--send` and `--config`) are added by `main()`.
         """
 
     @classmethod
     def step_names(cls, prefix):
-        """Return the names of the step methods with that prefix, in the order of their numbers."""
+        """Return the names of the step methods with that prefix, in running order."""
         return sorted(
             name
             for name in dir(cls)
@@ -63,13 +65,14 @@ class InvoicePortal:
 
     @classmethod
     def submits(cls):
-        """Return whether the script issues the invoice; some only validate the receipt."""
+        """Return whether the script issues the invoice; some only check the receipt."""
         return bool(cls.step_names("submit_"))
 
     def ticket(self):
         """Return the receipt's number, for the evidence folder.
 
-        It is the `--ticket` argument; a portal that names it differently overrides this method.
+        It is the `--ticket` argument; a portal that names it differently overrides this
+        method.
         """
         return self.args.ticket
 
@@ -91,18 +94,19 @@ class InvoicePortal:
         return path
 
     def show(self, selectors, width=22):
-        """Print the value of each field, to compare it with the receipt and the receiver."""
+        """Print each field's value, to compare it with the receipt and the receiver."""
         for selector in selectors:
             print("%-*s %r" % (width, selector, self.page.input_value(selector)))
 
     def comparable_text(self, text):
-        """Return a text in lowercase and without accents, to compare it with the portal's."""
+        """Return a text in lowercase and without accents, to compare it."""
         return text.strip().lower().translate(self.accents)
 
     def select_offered(self, selector, value, what):
         """Select a value, stopping when the portal doesn't offer it.
 
-        A Uso CFDI that the regime doesn't admit, for example, is missing from the options.
+        A Uso CFDI that the regime doesn't admit, for example, is missing from the
+        options.
         """
         offered = [
             option.get_attribute("value")
@@ -118,18 +122,20 @@ class InvoicePortal:
     def print_dialog(self, dialog):
         """Print an alert() or confirm() and dismiss it.
 
-        Many portals report errors this way, and Playwright would dismiss them without a trace.
-        Dismissing answers "No" to offers such as resending the invoice.
+        Many portals report errors this way, and Playwright would dismiss them without a
+        trace. Dismissing answers "No" to offers such as resending the invoice.
         """
         print("DIALOG: %s" % " ".join(dialog.message.split()))
         dialog.dismiss()
 
     def launch(self, playwright):
-        """Open Chromium without a window, through the proxy if the portal blocks foreign IPs.
+        """Open Chromium without a window, through the proxy if the portal blocks
+        foreign IPs.
 
-        Some portals block headless browsers, so it is the full Chromium (the "chromium" channel),
-        not the reduced headless build, and its user agent says "Chrome" instead of
-        "HeadlessChrome". The flag hides `navigator.webdriver`, which some blocking services check.
+        Some portals block headless browsers, so it is the full Chromium (the "chromium"
+        channel), not the reduced headless build, and its user agent says "Chrome"
+        instead of "HeadlessChrome". The flag hides `navigator.webdriver`, which some
+        blocking services check.
         """
         options = {
             "headless": True,
@@ -142,7 +148,8 @@ class InvoicePortal:
                 options["proxy"] = {"server": self.config.proxy}
             else:
                 print(
-                    "NOTE: this portal blocks IPs outside Mexico and there is no proxy; browsing directly"
+                    "NOTE: this portal blocks IPs outside Mexico and there is no "
+                    "proxy; browsing directly"
                 )
         browser = playwright.chromium.launch(**options)
         probe = browser.new_page()
@@ -201,7 +208,8 @@ class InvoicePortal:
             )
             parser.add_argument(
                 "--email",
-                help="where the portal sends the CFDI (default: from the configuration)",
+                help="where the portal sends the CFDI (default: from the "
+                "configuration)",
             )
             parser.add_argument(
                 "--send",
@@ -212,7 +220,8 @@ class InvoicePortal:
         args = parser.parse_args()
         config = Config.load(args.config)
         if cls.submits():
-            # Stop before opening the browser when no regime of the receiver admits the use.
+            # Stop before opening the browser when no regime of the receiver admits the
+            # use.
             config.receiver.regime_for(args.uso)
         portal = cls(args, config)
         if cls.submits() and not args.email:

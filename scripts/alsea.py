@@ -2,10 +2,12 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
-"""Invoice an Alsea receipt (Starbucks and the other Alsea brands) on alsea.interfactura.com.
+"""Invoice an Alsea receipt (Starbucks and the other Alsea brands) on
+alsea.interfactura.com.
 
 Usage:
-    alsea.py --brand Starbucks --ticket 123456789 --tienda 12345 --fecha 23/10/2026 --uso G03 [--send]
+    alsea.py --brand Starbucks --ticket 123456789 --tienda 12345 --fecha 23/10/2026 \
+        --uso G03 [--send]
 """
 
 import sys

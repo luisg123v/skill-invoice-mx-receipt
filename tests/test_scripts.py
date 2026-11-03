@@ -1,8 +1,8 @@
 """Tests for invoice-mx-receipt's scripts.
 
-They cover what doesn't need a browser: the configuration, the regime for each Uso CFDI, the order
-of the portal steps, and the requests by email and WhatsApp. The portals themselves are live
-sites, so they are checked with dry runs.
+They cover what doesn't need a browser: the configuration, the regime for each Uso CFDI,
+the order of the portal steps, and the requests by email and WhatsApp. The portals
+themselves are live sites, so they are checked with dry runs.
 """
 
 import argparse
@@ -223,7 +223,8 @@ def test_chat_message(import_script, config):
         request.receipt_data(args), request.billing_data(config, "D01")
     )
     assert message.startswith(
-        "Hola, ¿me pueden apoyar con la facturación de este ticket?\n\nDatos del ticket:\n"
+        "Hola, ¿me pueden apoyar con la facturación de este ticket?\n\n"
+        "Datos del ticket:\n"
     )
     assert "- Folio: 123456" in message
     assert "- Régimen fiscal: 614 - Ingresos por intereses" in message

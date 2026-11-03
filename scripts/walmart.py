@@ -5,7 +5,8 @@
 """Invoice a Walmart receipt on facturacion-clientes.walmart.com.
 
 Usage:
-    walmart.py --tc 1234567890123456789012 --tr 01234 --forma "Tarjeta de crédito" --uso S01 [--send]
+    walmart.py --tc 1234567890123456789012 --tr 01234 --forma "Tarjeta de crédito" \
+        --uso S01 [--send]
 """
 
 import sys
@@ -82,7 +83,8 @@ class Walmart(InvoicePortal):
         self.close_notice()
 
     def fill_02_receiver(self):
-        # RFC, postal code, state and municipality come prefilled; the address is optional.
+        # RFC, postal code, state and municipality come prefilled; the address is
+        # optional.
         self.page.fill("[id='Razón Social']", self.receiver.name)
         self.page.fill("#billing_email_input", self.args.email)
         self.page.select_option("[id='Régimen Fiscal']", self.regime())
@@ -101,7 +103,8 @@ class Walmart(InvoicePortal):
     def submit_01_confirm(self):
         self.page.click("#form_btn_accept")
         self.page.wait_for_timeout(3000)
-        # An "Alerta" modal asks "¿Están correctos todos sus datos?" with Cerrar / Continuar.
+        # An "Alerta" modal asks "¿Están correctos todos sus datos?" with Cerrar /
+        # Continuar.
         self.click_continue()
         self.page.wait_for_timeout(8000)
         if "/payment" not in self.page.url:
@@ -129,8 +132,8 @@ class Walmart(InvoicePortal):
             self.page.wait_for_timeout(15000)
 
     def submit_03_invoice(self):
-        # "Enviar a correo electrónico" comes selected, with the email of the receiver step;
-        # "Facturar" stamps the invoice.
+        # "Enviar a correo electrónico" comes selected, with the email of the receiver
+        # step; "Facturar" stamps the invoice.
         if "/invoiceSelection" not in self.page.url:
             raise PortalError("the last step did not open: %s" % self.text()[:600])
         inputs = self.page.locator(

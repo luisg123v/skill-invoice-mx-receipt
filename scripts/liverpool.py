@@ -16,7 +16,7 @@ from portal import InvoicePortal, PortalError
 
 
 def billing_code(value):
-    """Return the invoicing code without the spaces between its groups, stopping when it isn't one."""
+    """Return the invoicing code without spaces, stopping when it isn't one."""
     code = "".join(value.split()).upper()
     if not re.fullmatch(r"[A-Z0-9]{20}", code):
         raise argparse.ArgumentTypeError(
@@ -75,9 +75,9 @@ class Liverpool(InvoicePortal):
         self.page.fill("input[name=rfc]", self.receiver.rfc)
         self.page.click("button:has-text('Continuar') >> nth=0")
         self.page.wait_for_timeout(5000)
-        # When the RFC has invoiced before, the portal lists the data it keeps for it, and the fields
-        # stay disabled until one is selected. The script then writes every field again, because that
-        # data can be out of date.
+        # When the RFC has invoiced before, the portal lists the data it keeps for it,
+        # and the fields stay disabled until one is selected. The script then writes
+        # every field again, because that data can be out of date.
         if self.page.is_visible("text=Seleccionar"):
             print("SAVED DATA: %s" % self.text(".MuiModal-root"))
             self.page.click("text=Seleccionar >> nth=0")
@@ -104,7 +104,8 @@ class Liverpool(InvoicePortal):
         self.show(["input[name=%s]" % name for name in fields], width=26)
 
     def fill_03_confirmation(self):
-        # The last "Continuar" only opens a summary, with "Corregir datos" and "Generar factura".
+        # The last "Continuar" only opens a summary, with "Corregir datos" and "Generar
+        # factura".
         self.page.click("button:has-text('Continuar') >> nth=-1")
         self.page.wait_for_selector(
             "[role=dialog] button:has-text('Generar factura')", timeout=20000
@@ -114,7 +115,8 @@ class Liverpool(InvoicePortal):
     def submit_01_invoice(self):
         self.page.click("[role=dialog] button:has-text('Generar factura')")
         self.page.wait_for_timeout(15000)
-        # The portal finds a receipt already invoiced like any other, and only says so here.
+        # The portal finds a receipt already invoiced like any other, and only says so
+        # here.
         if "ya fue facturado" in self.text():
             raise PortalError(
                 "the receipt was already invoiced: Este código ya fue facturado"

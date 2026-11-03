@@ -5,7 +5,8 @@
 """Invoice a Miniso receipt on its Diverza portal (tickets.diverza.com/miniso-mexico).
 
 Usage:
-    miniso.py --ticket 0123401123456231026 --fecha 23/10/2026 --monto 99.90 --uso S01 [--send]
+    miniso.py --ticket 0123401123456231026 --fecha 23/10/2026 --monto 99.90 \
+        --uso S01 [--send]
 """
 
 import datetime
@@ -38,14 +39,14 @@ class Miniso(InvoicePortal):
         parser.add_argument("--monto", required=True)
 
     def field(self, name):
-        """Return the selector of a field of the receiver's form, by its id without the prefix."""
+        """Return the selector of a field of the receiver's form, by its id's suffix."""
         return self.field_prefix + name
 
     def fill_01_ticket(self):
         date = datetime.datetime.strptime(self.args.fecha, "%d/%m/%Y").date()
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
-        # The date only takes a click in the calendar, which shows the current month only (Miniso
-        # invoices within the month of the purchase).
+        # The date only takes a click in the calendar, which shows the current month
+        # only (Miniso invoices within the month of the purchase).
         self.page.fill("#search-ticket-form_folio", self.args.ticket)
         self.page.click("#search-ticket-form_fecha")
         self.page.wait_for_timeout(1000)
@@ -57,8 +58,8 @@ class Miniso(InvoicePortal):
         picked = self.page.input_value("#search-ticket-form_fecha")
         if picked != self.args.fecha:
             raise PortalError(
-                "the calendar has %r instead of %s (is the purchase from another month?)"
-                % (picked, self.args.fecha)
+                "the calendar has %r instead of %s (is the purchase from another "
+                "month?)" % (picked, self.args.fecha)
             )
         self.page.click("text=Buscar")
         self.page.wait_for_timeout(8000)
@@ -89,8 +90,9 @@ class Miniso(InvoicePortal):
     def submit_01_invoice(self):
         self.page.click("#billing_button")
         self.page.wait_for_timeout(12000)
-        # The answer comes in a modal ("Éxito: Se ha generado la factura <uuid> ..."). The page text
-        # also has the hidden options of the form, so read only the visible dialog.
+        # The answer comes in a modal ("Éxito: Se ha generado la factura <uuid> ...").
+        # The page text also has the hidden options of the form, so read only the
+        # visible dialog.
         dialogs = [
             dialog
             for dialog in self.page.query_selector_all(

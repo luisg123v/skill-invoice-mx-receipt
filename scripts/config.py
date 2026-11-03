@@ -1,7 +1,9 @@
-"""Configuration of the scripts: the receiver, where the CFDI goes, and the optional proxy.
+"""Configuration of the scripts: the receiver, where the CFDI goes, and the optional
+proxy.
 
 They come from a TOML file, `~/.config/invoice-mx-receipt/config.toml` by default (see
-`config.example.toml`), or the file the INVOICE_MX_RECEIPT_CONFIG environment variable points to.
+`config.example.toml`), or the file the INVOICE_MX_RECEIPT_CONFIG environment variable
+points to.
 """
 
 import datetime
@@ -150,7 +152,8 @@ class Receiver:
 class Config:
     receiver: Receiver
     email: str
-    # Some portals email links instead of attaching the XML; they send to this address, if set.
+    # Some portals email links instead of attaching the XML; they send to this address,
+    # if set.
     email_links: str = ""
     evidence_dir: Path = DEFAULT_EVIDENCE
     proxy: str = ""
@@ -170,8 +173,8 @@ class Config:
         ).expanduser()
         if not path.exists():
             raise SystemExit(
-                "ABORT: no configuration at %s; copy config.example.toml there and fill it"
-                % path
+                "ABORT: no configuration at %s; copy config.example.toml there and "
+                "fill it" % path
             )
         with path.open("rb") as config_file:
             data = tomllib.load(config_file)
@@ -207,7 +210,7 @@ class Config:
         )
 
     def receipt_folder(self, portal, ticket):
-        """Return (and create) the folder that keeps the screenshots and files of one receipt."""
+        """Return (and create) the folder of a receipt's screenshots and files."""
         stamp = datetime.date.today().isoformat()
         path = self.evidence_dir / (
             "%s-%s-%s" % (stamp, portal, re.sub(r"\W+", "_", ticket))

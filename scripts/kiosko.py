@@ -5,7 +5,8 @@
 """Invoice a receipt of Kiosko on facturas.mikiosko.mx.
 
 Usage:
-    kiosko.py --referencia "0123 4567 8901 2345 6789 012" [--referencia ...] --uso G03 [--send]
+    kiosko.py --referencia "0123 4567 8901 2345 6789 012" [--referencia ...] \
+        --uso G03 [--send]
 """
 
 import argparse
@@ -16,7 +17,7 @@ from portal import InvoicePortal, PortalError
 
 
 class AppendReference(argparse.Action):
-    """Collect the references, stopping at more than `limit`, the receipts the portal takes."""
+    """Collect the references, stopping at more than `limit`, the portal's maximum."""
 
     def __init__(self, *args, limit, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,8 +43,8 @@ class Kiosko(InvoicePortal):
             required=True,
             action=AppendReference,
             limit=cls.max_receipts,
-            help="the 23 digits after the portal's URL; repeat it to put up to %d receipts on one invoice"
-            % cls.max_receipts,
+            help="the 23 digits after the portal's URL; repeat it to put up to %d "
+            "receipts on one invoice" % cls.max_receipts,
         )
 
     def ticket(self):
@@ -54,8 +55,9 @@ class Kiosko(InvoicePortal):
         return ["".join(reference.split()) for reference in self.args.referencia]
 
     def type_field(self, name, value):
-        # The regime and Uso CFDI options load while the RFC is typed, not when it is filled. Clear the
-        # field first, because the portal fills some fields of an RFC it already knows.
+        # The regime and Uso CFDI options load while the RFC is typed, not when it is
+        # filled. Clear the field first, because the portal fills some fields of an RFC
+        # it already knows.
         field = self.page.locator("input[formcontrolname=%s]" % name)
         field.fill("")
         field.press_sequentially(value, delay=40)
@@ -78,8 +80,8 @@ class Kiosko(InvoicePortal):
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
         # A notice to check that the RFC is active at the SAT.
         self.page.get_by_role("button", name="Aceptar").click()
-        # The portal looks up the RFC and fills the name, the postal code and the email it has for it,
-        # so wait for it before typing them.
+        # The portal looks up the RFC and fills the name, the postal code and the email
+        # it has for it, so wait for it before typing them.
         with self.page.expect_response(
             lambda response: "Catalogos/Cliente/" in response.url
         ):
@@ -102,8 +104,8 @@ class Kiosko(InvoicePortal):
         references = self.references()
         total = 0
         for reference in references:
-            # The field has a mask, so fill() doesn't work. Clear it with the keyboard, and type from its
-            # start, because a click leaves the cursor where it lands.
+            # The field has a mask, so fill() doesn't work. Clear it with the keyboard,
+            # and type from its start, because a click leaves the cursor where it lands.
             field = self.page.locator("input.p-inputmask")
             field.click()
             field.press("Control+A")

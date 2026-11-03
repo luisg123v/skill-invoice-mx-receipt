@@ -2,10 +2,12 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
-"""Invoice a receipt of Carlscol (Carl's Jr in Colima and Manzanillo) on carlscol.libellum.com.mx.
+"""Invoice a receipt of Carlscol (Carl's Jr in Colima and Manzanillo) on
+carlscol.libellum.com.mx.
 
 Usage:
-    carlscol.py --ticket 12345 --fecha 25/10/2026 --monto 250.00 --sucursal Zentralia --uso G03 [--send]
+    carlscol.py --ticket 12345 --fecha 25/10/2026 --monto 250.00 --sucursal Zentralia \
+        --uso G03 [--send]
 """
 
 import sys
@@ -51,7 +53,7 @@ class Carlscol(InvoicePortal):
         return self.field_prefix + name
 
     def branch_value(self):
-        """Return the option value of the branch, stopping unless exactly one matches."""
+        """Return the branch's option value, stopping unless exactly one matches."""
         branches = {
             option.inner_text().strip(): option.get_attribute("value")
             for option in self.page.query_selector_all(
@@ -105,13 +107,15 @@ class Carlscol(InvoicePortal):
         self.page.fill(self.field("txt_razonsocial"), self.receiver.name)
         self.page.fill(self.field("txt_email"), self.args.email)
         self.page.fill(self.field("txt_cp"), self.receiver.postal_code)
-        # The address and the card's last digits are optional; the CFDI 4.0 only needs the CP.
+        # The address and the card's last digits are optional; the CFDI 4.0 only needs
+        # the CP.
         self.show([self.field(name) for name in self.receiver_fields], width=40)
 
     def submit_01_invoice(self):
-        # The button is meant to open a confirmation dialog, but clicked while the page is still
-        # loading after the regime postback, its onclick fails and the browser submits the form,
-        # which issues the invoice. So wait for the page's scripts first.
+        # The button is meant to open a confirmation dialog, but clicked while the page
+        # is still loading after the regime postback, its onclick fails and the browser
+        # submits the form, which issues the invoice. So wait for the page's scripts
+        # first.
         self.page.wait_for_function(
             "typeof BotonConfirmacion === 'function' && typeof jQuery === 'function'",
             timeout=60000,

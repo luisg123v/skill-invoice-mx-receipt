@@ -4,9 +4,10 @@
 # ///
 """Invoice a receipt of <Store> on <portal URL>.
 
-This is the starting point for a new portal: copy it to scripts/<store>.py, rename the class,
-and replace the URL, the arguments and the selectors with the portal's. Each step of the portal
-is a method, numbered in the order the portal shows them. See the docstring of portal.py.
+This is the starting point for a new portal: copy it to scripts/<store>.py, rename the
+class, and replace the URL, the arguments and the selectors with the portal's. Each step
+of the portal is a method, numbered in the order the portal shows them. See the
+docstring of portal.py.
 
 Usage:
     template.py --ticket 12345 --fecha 23/10/2026 --total 100.00 --uso G03 [--send]
@@ -34,7 +35,8 @@ class Template(InvoicePortal):
         self.page.fill("#total", self.args.total)
         self.page.click("button[type=submit]")
         self.page.wait_for_load_state("networkidle", timeout=60000)
-        # When the portal doesn't move on, its message says why: already invoiced, not found yet...
+        # When the portal doesn't move on, its message says why: already invoiced, not
+        # found yet...
         if not self.page.is_visible("#rfc"):
             raise PortalError(
                 "the portal did not accept the receipt: %s" % self.text()[:600]

@@ -2,16 +2,17 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "tomli; python_version < '3.11'"]
 # ///
-"""Invoice a restaurant receipt on Soft Restaurant's portal (facturacion.softrestaurant.com/<slug>).
+"""Invoice a restaurant receipt on Soft Restaurant's portal
+(facturacion.softrestaurant.com/<slug>).
 
-Many restaurants use Soft Restaurant; the receipt prints "Soft Restaurant" at the bottom and a link
-such as mefacturo.com/<slug>, which redirects to the portal. Restaurants that link mefacturo.mx
-use another portal, which this script doesn't cover (see reference/soft-restaurant.md). Without
---send it stops at the preview of the invoice.
+Many restaurants use Soft Restaurant; the receipt prints "Soft Restaurant" at the bottom
+and a link such as mefacturo.com/<slug>, which redirects to the portal. Restaurants that
+link mefacturo.mx use another portal, which this script doesn't cover (see
+reference/soft-restaurant.md). Without --send it stops at the preview of the invoice.
 
 Usage:
-    soft_restaurant.py --slug mirestaurante --folio 123456 --codigo 123456ABCDEFGH --total 285.00 \
-        --uso G03 [--send]
+    soft_restaurant.py --slug mirestaurante --folio 123456 --codigo 123456ABCDEFGH \
+        --total 285.00 --uso G03 [--send]
 """
 
 import re
@@ -78,14 +79,16 @@ class SoftRestaurant(InvoicePortal):
         self.page.wait_for_timeout(4000)
 
     def fill_02_customer(self):
-        # A notice about CFDI 4.0 opens first; then, for an RFC the restaurant doesn't know yet, a
-        # customer form. Its visible "Guardar" is a link; the two Guardar buttons are hidden.
+        # A notice about CFDI 4.0 opens first; then, for an RFC the restaurant doesn't
+        # know yet, a customer form. Its visible "Guardar" is a link; the two Guardar
+        # buttons are hidden.
         if self.page.is_visible("#acceptFeedback"):
             self.page.click("#acceptFeedback")
             self.page.wait_for_timeout(1500)
         if not self.page.is_visible(self.customer_form + "#Name"):
             print(
-                "WARNING: no customer form; the portal reused a saved customer. Check the preview."
+                "WARNING: no customer form; the portal reused a saved customer. Check "
+                "the preview."
             )
             return
         self.page.select_option(self.customer_form + "#ListTaxRegimes", self.regime())
@@ -110,8 +113,8 @@ class SoftRestaurant(InvoicePortal):
         self.page.wait_for_timeout(6000)
         if not self.page.locator("text=Previsualizar factura").is_visible():
             raise PortalError("the preview did not open: %s" % self.visible_messages())
-        # A saved customer skips the form, so the portal may use an old Uso CFDI. Check the receiver
-        # in the preview's XML tab and stop on any difference.
+        # A saved customer skips the form, so the portal may use an old Uso CFDI. Check
+        # the receiver in the preview's XML tab and stop on any difference.
         self.page.locator(
             "a:has-text('XML'):visible, li:has-text('XML'):visible"
         ).first.click()
@@ -140,8 +143,8 @@ class SoftRestaurant(InvoicePortal):
                 % (wrong or "Receptor", receptor[:400])
             )
         print("XML receiver OK: %s" % receptor[:300])
-        # The restaurant's system can round the unit price and add a cent, so compare the total
-        # with the receipt before stamping.
+        # The restaurant's system can round the unit price and add a cent, so compare
+        # the total with the receipt before stamping.
         total = re.search(r'\bTotal="([\d.]+)"', xml)
         print(
             "XML total: %s, receipt: %s"

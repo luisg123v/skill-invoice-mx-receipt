@@ -7,7 +7,8 @@
 The portal asks for the email after issuing the invoice; see reference/oxxo.md.
 
 Usage:
-    oxxo.py --fecha 26/09/2026 --folio 123456 --venta 10ABC20XYZ1 --total 100.00 --uso S01 [--send]
+    oxxo.py --fecha 26/09/2026 --folio 123456 --venta 10ABC20XYZ1 --total 100.00 \
+        --uso S01 [--send]
 """
 
 import datetime
@@ -68,7 +69,8 @@ class Oxxo(InvoicePortal):
                     )
                 break
         self.page.evaluate(
-            "()=>{document.querySelectorAll('.ui-widget-overlay').forEach(e=>e.remove());}"
+            "()=>{document.querySelectorAll('.ui-widget-overlay')"
+            ".forEach(e=>e.remove());}"
         )
         self.page.wait_for_timeout(400)
 
@@ -136,7 +138,8 @@ class Oxxo(InvoicePortal):
         self.close_info_dialog()
         picked = self.set_date(date)
         if picked.strip() != self.args.fecha:
-            # An empty date makes the portal answer "ejercicio fiscal diferente", which is misleading.
+            # An empty date makes the portal answer "ejercicio fiscal diferente", which
+            # is misleading.
             raise PortalError(
                 "the datepicker has %r instead of %s" % (picked, self.args.fecha)
             )
@@ -156,7 +159,7 @@ class Oxxo(InvoicePortal):
             raise PortalError("the portal didn't validate the receipt")
 
     def pick(self, menu, label):
-        """Pick an option of a PrimeFaces menu by its label, stopping when it isn't offered."""
+        """Pick a PrimeFaces menu option by its label; stop when it isn't offered."""
         options = self.page.eval_on_selector_all(
             "[id='form:%s_input'] option" % menu,
             "options => options.map(option => option.textContent.trim())",
@@ -202,7 +205,8 @@ class Oxxo(InvoicePortal):
     def send_email(self, seen=()):
         """Send the CFDI to the email, from the page that shows the invoice.
 
-        The page shows it after issuing the invoice, and after finding it in "Reimprime tu factura".
+        The page shows it after issuing the invoice, and after finding it in "Reimprime
+        tu factura".
         """
         self.page.fill(
             "input[placeholder='correo@dominio.com']:visible", self.args.email
