@@ -29,10 +29,22 @@ class FarmaciasSimilares(InvoicePortal):
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("--referencia", required=True, help="Referencia de Facturación FRANQUICIA, e.g. FH0123")
-        parser.add_argument("--codigo", required=True, help="the digits under the barcode")
-        parser.add_argument("--total", required=True, help="Total M.N., with cents, e.g. 100.00")
-        parser.add_argument("--forma", required=True, help="Forma de pago code, e.g. 04 for a credit card")
+        parser.add_argument(
+            "--referencia",
+            required=True,
+            help="Referencia de Facturación FRANQUICIA, e.g. FH0123",
+        )
+        parser.add_argument(
+            "--codigo", required=True, help="the digits under the barcode"
+        )
+        parser.add_argument(
+            "--total", required=True, help="Total M.N., with cents, e.g. 100.00"
+        )
+        parser.add_argument(
+            "--forma",
+            required=True,
+            help="Forma de pago code, e.g. 04 for a credit card",
+        )
         parser.add_argument(
             "--resend",
             action="store_true",
@@ -63,7 +75,10 @@ class FarmaciasSimilares(InvoicePortal):
             if host == provider_host or host.endswith("." + provider_host):
                 self.provider = prefix
                 return
-        raise PortalError("the reference sends to %s, a portal this script doesn't know" % self.page.url)
+        raise PortalError(
+            "the reference sends to %s, a portal this script doesn't know"
+            % self.page.url
+        )
 
     def run_provider_step(self, step):
         getattr(self, "%s_%s" % (self.provider, step))()
@@ -107,14 +122,23 @@ class FarmaciasSimilares(InvoicePortal):
             print("status page: %s" % self.text()[:500])
             self.soltec_download()
             if not self.args.resend:
-                raise PortalError("the receipt is already invoiced; pass --resend to have the CFDI emailed again")
+                raise PortalError(
+                    "the receipt is already invoiced; pass --resend to have the CFDI emailed again"
+                )
             self.soltec_resend()
-            raise PortalDone("the receipt is already invoiced; the portal was asked to email the CFDI again")
+            raise PortalDone(
+                "the receipt is already invoiced; the portal was asked to email the CFDI again"
+            )
         # The portal checks the barcode's format and writes below the field whether it is right.
         if "CodigoBarras correcto" not in self.text("form"):
-            raise PortalError("the portal didn't accept the barcode: %s" % self.text("form")[:400])
+            raise PortalError(
+                "the portal didn't accept the barcode: %s" % self.text("form")[:400]
+            )
         self.soltec_type_fields([("total", self.args.total)])
-        self.show(["input[name=sucursal]", "input[name=codigoBarras]", "input[name=total]"], width=30)
+        self.show(
+            ["input[name=sucursal]", "input[name=codigoBarras]", "input[name=total]"],
+            width=30,
+        )
 
     def soltec_receiver(self):
         # The regime options load after the postal code.
@@ -172,7 +196,9 @@ class FarmaciasSimilares(InvoicePortal):
     @staticmethod
     def receiver_rfc(xml):
         """Return the receiver's RFC of a CFDI 4.0."""
-        receiver = ElementTree.fromstring(xml).find("{http://www.sat.gob.mx/cfd/4}Receptor")
+        receiver = ElementTree.fromstring(xml).find(
+            "{http://www.sat.gob.mx/cfd/4}Receptor"
+        )
         return receiver.get("Rfc") if receiver is not None else None
 
     def soltec_download(self):
@@ -190,7 +216,9 @@ class FarmaciasSimilares(InvoicePortal):
         if self.receiver_rfc(paths["XML"].read_bytes()) != self.receiver.rfc:
             for path in paths.values():
                 path.unlink()
-            raise PortalError("the receipt was invoiced to another RFC; check the barcode")
+            raise PortalError(
+                "the receipt was invoiced to another RFC; check the barcode"
+            )
         for label, path in paths.items():
             print("%s: %s" % (label, path))
 
@@ -203,7 +231,10 @@ class FarmaciasSimilares(InvoicePortal):
         form = self.page.locator("form[action*=enviarCorreoFacturaDatosTicket]")
         # The form is gone once it has been used, and the page only says where the CFDI was sent.
         if not form.count():
-            raise PortalError("the status page has no form to send the CFDI again: %s" % self.text()[:800])
+            raise PortalError(
+                "the status page has no form to send the CFDI again: %s"
+                % self.text()[:800]
+            )
         form.locator("input[name=correoPara]").fill(self.args.email)
         form.locator("button[type=submit]").click()
         self.page.wait_for_load_state("networkidle", timeout=60000)

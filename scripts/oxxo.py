@@ -42,14 +42,19 @@ class Oxxo(InvoicePortal):
     def add_arguments(cls, parser):
         parser.add_argument("--fecha", required=True, help="dd/mm/yyyy")
         parser.add_argument("--folio", required=True, help="Fol_Vta")
-        parser.add_argument("--venta", required=True, help="ID de venta, e.g. 10ABC20XYZ1")
+        parser.add_argument(
+            "--venta", required=True, help="ID de venta, e.g. 10ABC20XYZ1"
+        )
         parser.add_argument("--total", required=True)
 
     def ticket(self):
         return self.args.folio
 
     def close_info_dialog(self):
-        for selector in ["#form\\:dlgInfoTicket a.ui-dialog-titlebar-close", "a.ui-dialog-titlebar-close"]:
+        for selector in [
+            "#form\\:dlgInfoTicket a.ui-dialog-titlebar-close",
+            "a.ui-dialog-titlebar-close",
+        ]:
             element = self.page.query_selector(selector)
             if element and element.is_visible():
                 try:
@@ -57,9 +62,14 @@ class Oxxo(InvoicePortal):
                     self.page.wait_for_timeout(800)
                 except PlaywrightError as error:
                     # The overlay is removed below anyway.
-                    print("NOTE: could not close the info dialog: %s" % error.message.splitlines()[0])
+                    print(
+                        "NOTE: could not close the info dialog: %s"
+                        % error.message.splitlines()[0]
+                    )
                 break
-        self.page.evaluate("()=>{document.querySelectorAll('.ui-widget-overlay').forEach(e=>e.remove());}")
+        self.page.evaluate(
+            "()=>{document.querySelectorAll('.ui-widget-overlay').forEach(e=>e.remove());}"
+        )
         self.page.wait_for_timeout(400)
 
     def set_date(self, date):
@@ -67,14 +77,26 @@ class Oxxo(InvoicePortal):
         self.page.click("#form\\:fecha_input")
         self.page.wait_for_timeout(1400)
         for _attempt in range(12):
-            month = (self.page.inner_text("#ui-datepicker-div .ui-datepicker-month") or "").strip().lower()
-            year = (self.page.inner_text("#ui-datepicker-div .ui-datepicker-year") or "").strip()
-            if month in self.months and int(year) * 12 + self.months.index(month) > date.year * 12 + date.month - 1:
+            month = (
+                (self.page.inner_text("#ui-datepicker-div .ui-datepicker-month") or "")
+                .strip()
+                .lower()
+            )
+            year = (
+                self.page.inner_text("#ui-datepicker-div .ui-datepicker-year") or ""
+            ).strip()
+            if (
+                month in self.months
+                and int(year) * 12 + self.months.index(month)
+                > date.year * 12 + date.month - 1
+            ):
                 self.page.click("#ui-datepicker-div a.ui-datepicker-prev")
                 self.page.wait_for_timeout(500)
                 continue
             break
-        for link in self.page.query_selector_all("#ui-datepicker-div td:not(.ui-datepicker-other-month) a"):
+        for link in self.page.query_selector_all(
+            "#ui-datepicker-div td:not(.ui-datepicker-other-month) a"
+        ):
             if (link.inner_text() or "").strip() == str(date.day):
                 link.click()
                 break
@@ -115,14 +137,19 @@ class Oxxo(InvoicePortal):
         picked = self.set_date(date)
         if picked.strip() != self.args.fecha:
             # An empty date makes the portal answer "ejercicio fiscal diferente", which is misleading.
-            raise PortalError("the datepicker has %r instead of %s" % (picked, self.args.fecha))
+            raise PortalError(
+                "the datepicker has %r instead of %s" % (picked, self.args.fecha)
+            )
         self.page.fill("#form\\:folio", self.args.folio)
         self.page.fill("#form\\:venta", self.args.venta)
         self.page.fill("#form\\:total", self.args.total)
         self.click_validate()
         messages = self.wait_messages()
         button = self.page.query_selector("#form\\:continuar")
-        print("fecha=%s folio=%s venta=%s total=%s" % (picked, self.args.folio, self.args.venta, self.args.total))
+        print(
+            "fecha=%s folio=%s venta=%s total=%s"
+            % (picked, self.args.folio, self.args.venta, self.args.total)
+        )
         print("message: %s" % (messages[0] if messages else "(none)"))
         print("continue enabled: %s" % bool(button and button.is_enabled()))
         if not button or not button.is_enabled():
@@ -131,13 +158,19 @@ class Oxxo(InvoicePortal):
     def pick(self, menu, label):
         """Pick an option of a PrimeFaces menu by its label, stopping when it isn't offered."""
         options = self.page.eval_on_selector_all(
-            "[id='form:%s_input'] option" % menu, "options => options.map(option => option.textContent.trim())"
+            "[id='form:%s_input'] option" % menu,
+            "options => options.map(option => option.textContent.trim())",
         )
         matching = [
-            option for option in options if option and self.comparable_text(option) == self.comparable_text(label)
+            option
+            for option in options
+            if option and self.comparable_text(option) == self.comparable_text(label)
         ]
         if not matching:
-            raise PortalError("%r not offered; options: %s" % (label, [option for option in options if option]))
+            raise PortalError(
+                "%r not offered; options: %s"
+                % (label, [option for option in options if option])
+            )
         self.page.click("[id='form:%s']" % menu)
         self.page.wait_for_timeout(700)
         self.page.click("[id='form:%s_panel'] li:text-is('%s')" % (menu, matching[0]))
@@ -171,7 +204,9 @@ class Oxxo(InvoicePortal):
 
         The page shows it after issuing the invoice, and after finding it in "Reimprime tu factura".
         """
-        self.page.fill("input[placeholder='correo@dominio.com']:visible", self.args.email)
+        self.page.fill(
+            "input[placeholder='correo@dominio.com']:visible", self.args.email
+        )
         self.page.click("button:visible:has-text('Enviar correo')")
         self.page.wait_for_load_state("networkidle")
         messages = self.wait_messages(seen)

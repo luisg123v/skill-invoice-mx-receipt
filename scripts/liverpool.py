@@ -19,7 +19,9 @@ def billing_code(value):
     """Return the invoicing code without the spaces between its groups, stopping when it isn't one."""
     code = "".join(value.split()).upper()
     if not re.fullmatch(r"[A-Z0-9]{20}", code):
-        raise argparse.ArgumentTypeError("the invoicing code should have 20 letters and digits, not %r" % value)
+        raise argparse.ArgumentTypeError(
+            "the invoicing code should have 20 letters and digits, not %r" % value
+        )
     return code
 
 
@@ -35,7 +37,9 @@ class Liverpool(InvoicePortal):
             type=billing_code,
             help='the 20 characters under "Código de facturación", in groups of 5',
         )
-        parser.add_argument("--total", required=True, help="the receipt's total, with cents")
+        parser.add_argument(
+            "--total", required=True, help="the receipt's total, with cents"
+        )
 
     def ticket(self):
         return self.args.codigo
@@ -43,7 +47,9 @@ class Liverpool(InvoicePortal):
     def choose(self, name, value, what):
         """Pick an option of a dropdown, stopping when the portal doesn't offer it."""
         # The list opens from the element next to the hidden input that keeps the value.
-        self.page.locator("input[name=%s]" % name).locator("xpath=..").locator("[role=combobox]").click()
+        self.page.locator("input[name=%s]" % name).locator("xpath=..").locator(
+            "[role=combobox]"
+        ).click()
         options = self.page.locator("li[role=option]")
         options.first.wait_for(timeout=10000)
         offered = options.evaluate_all("items => items.map(item => item.dataset.value)")
@@ -60,7 +66,9 @@ class Liverpool(InvoicePortal):
         self.page.click("button:has-text('Buscar ticket')")
         self.page.wait_for_timeout(6000)
         if "Ticket encontrado" not in self.text():
-            raise PortalError("the portal did not find the receipt: %s" % self.text()[:800])
+            raise PortalError(
+                "the portal did not find the receipt: %s" % self.text()[:800]
+            )
         self.show(["input[name=billingCode]", "input[name=amount]"])
 
     def fill_02_receiver(self):
@@ -83,13 +91,24 @@ class Liverpool(InvoicePortal):
         self.page.fill("input[name=maternalName]", self.receiver.maternal_last_name)
         self.page.fill("input[name=postalCode]", self.receiver.postal_code)
         self.page.fill("input[name=email]", self.args.email)
-        fields = ["rfc", "regime", "useCFDI", "firstName", "paternalName", "maternalName", "postalCode", "email"]
+        fields = [
+            "rfc",
+            "regime",
+            "useCFDI",
+            "firstName",
+            "paternalName",
+            "maternalName",
+            "postalCode",
+            "email",
+        ]
         self.show(["input[name=%s]" % name for name in fields], width=26)
 
     def fill_03_confirmation(self):
         # The last "Continuar" only opens a summary, with "Corregir datos" and "Generar factura".
         self.page.click("button:has-text('Continuar') >> nth=-1")
-        self.page.wait_for_selector("[role=dialog] button:has-text('Generar factura')", timeout=20000)
+        self.page.wait_for_selector(
+            "[role=dialog] button:has-text('Generar factura')", timeout=20000
+        )
         print("SUMMARY: %s" % self.text("[role=dialog]"))
 
     def submit_01_invoice(self):
@@ -97,7 +116,9 @@ class Liverpool(InvoicePortal):
         self.page.wait_for_timeout(15000)
         # The portal finds a receipt already invoiced like any other, and only says so here.
         if "ya fue facturado" in self.text():
-            raise PortalError("the receipt was already invoiced: Este código ya fue facturado")
+            raise PortalError(
+                "the receipt was already invoiced: Este código ya fue facturado"
+            )
         print("RESULT: %s" % self.text()[:1500])
 
 

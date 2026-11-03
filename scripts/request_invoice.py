@@ -74,7 +74,11 @@ def whatsapp_link(number, message):
 
 def email_text(receipt, billing, signature, intro=None):
     """Return the plain-text part, for mail clients that don't show HTML."""
-    lines = [EMAIL_GREETING, ""] + ([intro, ""] if intro else []) + [EMAIL_REQUEST, "", "Datos del ticket:"]
+    lines = (
+        [EMAIL_GREETING, ""]
+        + ([intro, ""] if intro else [])
+        + [EMAIL_REQUEST, "", "Datos del ticket:"]
+    )
     lines += ["- %s: %s" % item for item in receipt]
     lines += ["", "Datos de facturación:"]
     lines += ["- %s: %s" % item for item in billing]
@@ -85,13 +89,18 @@ def email_text(receipt, billing, signature, intro=None):
 
 
 def html_list(pairs):
-    return "<ul>%s</ul>" % "".join("<li>%s: %s</li>" % (escape(key), escape(value)) for key, value in pairs)
+    return "<ul>%s</ul>" % "".join(
+        "<li>%s: %s</li>" % (escape(key), escape(value)) for key, value in pairs
+    )
 
 
 def email_html(receipt, billing, signature, intro=None):
     parts = ["<html><body>", "<p>%s</p>" % escape(EMAIL_GREETING)]
     if intro:
-        parts += ["<p>%s</p>" % escape(paragraph).replace("\n", "<br>") for paragraph in intro.split("\n\n")]
+        parts += [
+            "<p>%s</p>" % escape(paragraph).replace("\n", "<br>")
+            for paragraph in intro.split("\n\n")
+        ]
     parts += [
         "<p>%s</p>" % escape(EMAIL_REQUEST),
         "<p>Datos del ticket:</p>%s" % html_list(receipt),
@@ -99,7 +108,9 @@ def email_html(receipt, billing, signature, intro=None):
         "<p>%s</p>" % escape(EMAIL_CLOSING),
     ]
     if signature:
-        parts.append("<p>--<br>%s</p>" % "<br>".join(escape(line) for line in signature))
+        parts.append(
+            "<p>--<br>%s</p>" % "<br>".join(escape(line) for line in signature)
+        )
     parts.append("</body></html>")
     return "".join(parts)
 
@@ -108,15 +119,26 @@ def build_email(config, args, receipt, billing):
     msg = EmailMessage()
     msg["From"] = config.sender
     msg["To"] = args.to
-    msg["Subject"] = "Facturación de consumo %s" % ("#%s" % args.ref if args.ref else "del día %s" % args.fecha)
+    msg["Subject"] = "Facturación de consumo %s" % (
+        "#%s" % args.ref if args.ref else "del día %s" % args.fecha
+    )
     msg["Date"] = formatdate(localtime=True)
-    msg["Message-ID"] = make_msgid(domain=config.sender.rpartition("@")[2].strip("> ") or None)
+    msg["Message-ID"] = make_msgid(
+        domain=config.sender.rpartition("@")[2].strip("> ") or None
+    )
     msg.set_content(email_text(receipt, billing, config.signature, args.intro))
-    msg.add_alternative(email_html(receipt, billing, config.signature, args.intro), subtype="html")
+    msg.add_alternative(
+        email_html(receipt, billing, config.signature, args.intro), subtype="html"
+    )
     for path in args.image:
-        maintype, subtype = (mimetypes.guess_type(path.name)[0] or "application/octet-stream").split("/", 1)
+        maintype, subtype = (
+            mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        ).split("/", 1)
         msg.add_attachment(
-            path.read_bytes(), maintype=maintype, subtype=subtype, filename="ticket_%s%s" % (args.fecha, path.suffix)
+            path.read_bytes(),
+            maintype=maintype,
+            subtype=subtype,
+            filename="ticket_%s%s" % (args.fecha, path.suffix),
         )
     if args.csf:
         if not config.csf:
@@ -131,18 +153,41 @@ def build_email(config, args, receipt, billing):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--to", help="store email")
     target.add_argument("--whatsapp", help="store WhatsApp number")
     parser.add_argument("--fecha", required=True, help="yyyy-mm-dd")
     parser.add_argument("--importe", required=True)
-    parser.add_argument("--uso", required=True, choices=CFDI_USAGES, metavar="USO", help="Uso CFDI, e.g. G03")
-    parser.add_argument("--image", type=Path, action="append", default=[], help="photo of the receipt (email only)")
+    parser.add_argument(
+        "--uso",
+        required=True,
+        choices=CFDI_USAGES,
+        metavar="USO",
+        help="Uso CFDI, e.g. G03",
+    )
+    parser.add_argument(
+        "--image",
+        type=Path,
+        action="append",
+        default=[],
+        help="photo of the receipt (email only)",
+    )
     parser.add_argument("--ref", help="receipt number, only when certain")
-    parser.add_argument("--intro", help="paragraph before the request, e.g. that the portal failed")
-    parser.add_argument("--field", action="append", default=[], help='other receipt field, "Label=value"')
-    parser.add_argument("--csf", action="store_true", help="attach the Constancia de Situación Fiscal")
+    parser.add_argument(
+        "--intro", help="paragraph before the request, e.g. that the portal failed"
+    )
+    parser.add_argument(
+        "--field",
+        action="append",
+        default=[],
+        help='other receipt field, "Label=value"',
+    )
+    parser.add_argument(
+        "--csf", action="store_true", help="attach the Constancia de Situación Fiscal"
+    )
     parser.add_argument("--send", action="store_true")
     parser.add_argument("--config", type=Path, help="configuration file")
     args = parser.parse_args()
@@ -166,13 +211,19 @@ def main():
     eml.write_bytes(bytes(msg))
     print("To: %s\nSubject: %s\n" % (msg["To"], msg["Subject"]))
     print(msg.get_body(("plain",)).get_content())
-    print("attachments: %s" % ", ".join(part.get_filename() for part in msg.iter_attachments()))
+    print(
+        "attachments: %s"
+        % ", ".join(part.get_filename() for part in msg.iter_attachments())
+    )
     print("saved: %s" % eml)
     if not args.send:
         print("dry run: not sent")
         return 0
     if not config.sendmail:
-        raise SystemExit("ABORT: sending needs request.sendmail in the configuration; send %s by hand" % eml)
+        raise SystemExit(
+            "ABORT: sending needs request.sendmail in the configuration; send %s by hand"
+            % eml
+        )
     subprocess.run(config.sendmail, input=bytes(msg), check=True)
     print("SENT, Message-ID %s" % msg["Message-ID"])
     if config.sent_copy_command:

@@ -36,7 +36,9 @@ class Template(InvoicePortal):
         self.page.wait_for_load_state("networkidle", timeout=60000)
         # When the portal doesn't move on, its message says why: already invoiced, not found yet...
         if not self.page.is_visible("#rfc"):
-            raise PortalError("the portal did not accept the receipt: %s" % self.text()[:600])
+            raise PortalError(
+                "the portal did not accept the receipt: %s" % self.text()[:600]
+            )
 
     def fill_02_receiver(self):
         self.page.fill("#rfc", self.receiver.rfc)

@@ -54,34 +54,58 @@ class CfdiUsage:
     regimes: tuple
 
 
-EXPENSE_REGIMES = ("601", "603", "606", "612", "620", "621", "622", "623", "624", "625", "626")
+EXPENSE_REGIMES = (
+    "601",
+    "603",
+    "606",
+    "612",
+    "620",
+    "621",
+    "622",
+    "623",
+    "624",
+    "625",
+    "626",
+)
 DEDUCTION_REGIMES = ("605", "606", "607", "608", "611", "612", "614", "615", "625")
 CFDI_USAGES = {
     "G01": CfdiUsage("Adquisición de mercancías", EXPENSE_REGIMES),
-    "G02": CfdiUsage("Devoluciones, descuentos o bonificaciones", EXPENSE_REGIMES + ("616",)),
+    "G02": CfdiUsage(
+        "Devoluciones, descuentos o bonificaciones", EXPENSE_REGIMES + ("616",)
+    ),
     "G03": CfdiUsage("Gastos en general", EXPENSE_REGIMES),
     "I01": CfdiUsage("Construcciones", EXPENSE_REGIMES),
     "I02": CfdiUsage("Mobiliario y equipo de oficina por inversiones", EXPENSE_REGIMES),
     "I03": CfdiUsage("Equipo de transporte", EXPENSE_REGIMES),
     "I04": CfdiUsage("Equipo de cómputo y accesorios", EXPENSE_REGIMES),
-    "I05": CfdiUsage("Dados, troqueles, moldes, matrices y herramental", EXPENSE_REGIMES),
+    "I05": CfdiUsage(
+        "Dados, troqueles, moldes, matrices y herramental", EXPENSE_REGIMES
+    ),
     "I06": CfdiUsage("Comunicaciones telefónicas", EXPENSE_REGIMES),
     "I07": CfdiUsage("Comunicaciones satelitales", EXPENSE_REGIMES),
     "I08": CfdiUsage("Otra maquinaria y equipo", EXPENSE_REGIMES),
-    "D01": CfdiUsage("Honorarios médicos, dentales y gastos hospitalarios", DEDUCTION_REGIMES),
-    "D02": CfdiUsage("Gastos médicos por incapacidad o discapacidad", DEDUCTION_REGIMES),
+    "D01": CfdiUsage(
+        "Honorarios médicos, dentales y gastos hospitalarios", DEDUCTION_REGIMES
+    ),
+    "D02": CfdiUsage(
+        "Gastos médicos por incapacidad o discapacidad", DEDUCTION_REGIMES
+    ),
     "D03": CfdiUsage("Gastos funerales", DEDUCTION_REGIMES),
     "D04": CfdiUsage("Donativos", DEDUCTION_REGIMES),
     "D05": CfdiUsage(
-        "Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)", DEDUCTION_REGIMES
+        "Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)",
+        DEDUCTION_REGIMES,
     ),
     "D06": CfdiUsage("Aportaciones voluntarias al SAR", DEDUCTION_REGIMES),
     "D07": CfdiUsage("Primas por seguros de gastos médicos", DEDUCTION_REGIMES),
     "D08": CfdiUsage("Gastos de transportación escolar obligatoria", DEDUCTION_REGIMES),
     "D09": CfdiUsage(
-        "Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones", DEDUCTION_REGIMES
+        "Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones",
+        DEDUCTION_REGIMES,
     ),
-    "D10": CfdiUsage("Pagos por servicios educativos (colegiaturas)", DEDUCTION_REGIMES),
+    "D10": CfdiUsage(
+        "Pagos por servicios educativos (colegiaturas)", DEDUCTION_REGIMES
+    ),
     "S01": CfdiUsage("Sin efectos fiscales", tuple(REGIMES)),
 }
 
@@ -100,7 +124,9 @@ class Receiver:
     @property
     def last_names(self):
         """Return both last names, for the portals that ask for them in one field."""
-        return " ".join(name for name in (self.paternal_last_name, self.maternal_last_name) if name)
+        return " ".join(
+            name for name in (self.paternal_last_name, self.maternal_last_name) if name
+        )
 
     @property
     def name(self):
@@ -115,7 +141,8 @@ class Receiver:
             if regime_code in CFDI_USAGES[usage].regimes:
                 return regime_code
         raise SystemExit(
-            "ABORT: Uso CFDI %s admits none of the receiver's regimes (%s)" % (usage, ", ".join(self.regimes))
+            "ABORT: Uso CFDI %s admits none of the receiver's regimes (%s)"
+            % (usage, ", ".join(self.regimes))
         )
 
 
@@ -138,9 +165,14 @@ class Config:
     @classmethod
     def load(cls, path=None):
         """Read the configuration file, stopping when it lacks a required value."""
-        path = Path(path or os.environ.get("INVOICE_MX_RECEIPT_CONFIG") or DEFAULT_CONFIG).expanduser()
+        path = Path(
+            path or os.environ.get("INVOICE_MX_RECEIPT_CONFIG") or DEFAULT_CONFIG
+        ).expanduser()
         if not path.exists():
-            raise SystemExit("ABORT: no configuration at %s; copy config.example.toml there and fill it" % path)
+            raise SystemExit(
+                "ABORT: no configuration at %s; copy config.example.toml there and fill it"
+                % path
+            )
         with path.open("rb") as config_file:
             data = tomllib.load(config_file)
         receiver = data.get("receiver", {})
@@ -150,9 +182,15 @@ class Config:
             missing.append("email")
         if missing:
             raise SystemExit("ABORT: %s lacks %s" % (path, ", ".join(missing)))
-        unknown = [regime_code for regime_code in receiver["regimes"] if regime_code not in REGIMES]
+        unknown = [
+            regime_code
+            for regime_code in receiver["regimes"]
+            if regime_code not in REGIMES
+        ]
         if unknown:
-            raise SystemExit("ABORT: %s has unknown regimes: %s" % (path, ", ".join(unknown)))
+            raise SystemExit(
+                "ABORT: %s has unknown regimes: %s" % (path, ", ".join(unknown))
+            )
         request = data.get("request", {})
         return cls(
             receiver=Receiver(**receiver),
@@ -171,7 +209,9 @@ class Config:
     def receipt_folder(self, portal, ticket):
         """Return (and create) the folder that keeps the screenshots and files of one receipt."""
         stamp = datetime.date.today().isoformat()
-        path = self.evidence_dir / ("%s-%s-%s" % (stamp, portal, re.sub(r"\W+", "_", ticket)))
+        path = self.evidence_dir / (
+            "%s-%s-%s" % (stamp, portal, re.sub(r"\W+", "_", ticket))
+        )
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -189,7 +229,13 @@ class Config:
         if self.proxy_listening():
             return
         if not self.proxy_command:
-            raise SystemExit("ABORT: nothing listens on the proxy %s and there is no proxy_command" % self.proxy)
+            raise SystemExit(
+                "ABORT: nothing listens on the proxy %s and there is no proxy_command"
+                % self.proxy
+            )
         subprocess.run(self.proxy_command, check=False, timeout=30)
         if not self.proxy_listening():
-            raise SystemExit("ABORT: %r did not open the proxy %s" % (" ".join(self.proxy_command), self.proxy))
+            raise SystemExit(
+                "ABORT: %r did not open the proxy %s"
+                % (" ".join(self.proxy_command), self.proxy)
+            )

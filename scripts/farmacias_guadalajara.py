@@ -38,8 +38,13 @@ class FarmaciasGuadalajara(InvoicePortal):
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("--qr", help="URL in the receipt's QR (it has folio, caja, ticket, fecha and tienda)")
-        parser.add_argument("--folio", help="FOLIO FACTURA, e.g. 123456-123456-123456 (without --qr)")
+        parser.add_argument(
+            "--qr",
+            help="URL in the receipt's QR (it has folio, caja, ticket, fecha and tienda)",
+        )
+        parser.add_argument(
+            "--folio", help="FOLIO FACTURA, e.g. 123456-123456-123456 (without --qr)"
+        )
         parser.add_argument("--caja")
         parser.add_argument("--ticket", help="No TICKET")
         parser.add_argument("--fecha", help="FECHA COMPRA, yyyy-mm-dd")
@@ -56,10 +61,19 @@ class FarmaciasGuadalajara(InvoicePortal):
 
     def ticket(self):
         if self.args.qr:
-            query = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.args.qr).query))
+            query = dict(
+                urllib.parse.parse_qsl(urllib.parse.urlsplit(self.args.qr).query)
+            )
             self.args.folio = query.get("folio")
-        elif not self.args.folio or not self.args.caja or not self.args.ticket or not self.args.fecha:
-            raise SystemExit("ABORT: pass --qr, or --folio, --caja, --ticket and --fecha")
+        elif (
+            not self.args.folio
+            or not self.args.caja
+            or not self.args.ticket
+            or not self.args.fecha
+        ):
+            raise SystemExit(
+                "ABORT: pass --qr, or --folio, --caja, --ticket and --fecha"
+            )
         return self.args.folio
 
     def alert_text(self):
@@ -70,14 +84,20 @@ class FarmaciasGuadalajara(InvoicePortal):
 
     def keep_invoice_answer(self, response):
         """Keep the answer of the service that issues the invoice, which has the XML and the PDF."""
-        if "generateInvoice" in (response.request.post_data_buffer or b"").decode("utf-8", "replace"):
+        if "generateInvoice" in (response.request.post_data_buffer or b"").decode(
+            "utf-8", "replace"
+        ):
             self.answers.append(response)
 
     def fill_01_folio(self):
         self.page.on("response", self.keep_invoice_answer)
-        response = self.page.goto(self.args.qr or self.url, wait_until="domcontentloaded", timeout=90000)
+        response = self.page.goto(
+            self.args.qr or self.url, wait_until="domcontentloaded", timeout=90000
+        )
         if response.status == 403:
-            raise PortalError("Akamai blocked the browser (403): %s" % self.text()[:300])
+            raise PortalError(
+                "Akamai blocked the browser (403): %s" % self.text()[:300]
+            )
         self.page.wait_for_selector("#folioFactura", timeout=60000)
         self.page.wait_for_timeout(3000)
         if not self.args.qr:
@@ -131,7 +151,10 @@ class FarmaciasGuadalajara(InvoicePortal):
         print("RESULT: %s" % self.alert_text())
         for response in self.answers:
             body = response.text()
-            print("code %s: %s" % (self.tag(body, "responseCode"), self.tag(body, "responseMessage")))
+            print(
+                "code %s: %s"
+                % (self.tag(body, "responseCode"), self.tag(body, "responseMessage"))
+            )
             for data, name in (("xmlFile", "xmlFileName"), ("pdfFile", "pdfFileName")):
                 if self.tag(body, data):
                     path = self.out / Path(self.tag(body, name) or data).name

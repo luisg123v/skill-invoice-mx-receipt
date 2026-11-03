@@ -84,12 +84,16 @@ def test_load_config_from_environment(import_script, config_path, monkeypatch):
 def test_load_config_missing_fields(import_script, tmp_path):
     path = tmp_path / "config.toml"
     path.write_text('[receiver]\nrfc = "PEMJ800101AB1"\n')
-    with pytest.raises(SystemExit, match="receiver.first_names.*receiver.regimes, email"):
+    with pytest.raises(
+        SystemExit, match="receiver.first_names.*receiver.regimes, email"
+    ):
         import_script("config").Config.load(path)
 
 
 def test_load_config_one_last_name(import_script, config_path):
-    config_path.write_text(config_path.read_text().replace('maternal_last_name = "MARTINEZ"\n', ""))
+    config_path.write_text(
+        config_path.read_text().replace('maternal_last_name = "MARTINEZ"\n', "")
+    )
     receiver = import_script("config").Config.load(config_path).receiver
     assert receiver.last_names == "PEREZ"
     assert receiver.name == "JUAN PEREZ"
@@ -181,7 +185,10 @@ def test_kiosko_receipts_limit(import_script):
 
 @pytest.mark.parametrize(
     "value, expected",
-    [("ABCDE FGH1J KLMNO PQRST", "ABCDEFGH1JKLMNOPQRST"), ("abcdefgh1jklmnopqrst", "ABCDEFGH1JKLMNOPQRST")],
+    [
+        ("ABCDE FGH1J KLMNO PQRST", "ABCDEFGH1JKLMNOPQRST"),
+        ("abcdefgh1jklmnopqrst", "ABCDEFGH1JKLMNOPQRST"),
+    ],
 )
 def test_liverpool_billing_code(import_script, value, expected):
     assert import_script("liverpool").billing_code(value) == expected
@@ -212,8 +219,12 @@ def request_args(**values):
 def test_chat_message(import_script, config):
     request = import_script("request_invoice")
     args = request_args(field=["Folio=123456"])
-    message = request.chat_message(request.receipt_data(args), request.billing_data(config, "D01"))
-    assert message.startswith("Hola, ¿me pueden apoyar con la facturación de este ticket?\n\nDatos del ticket:\n")
+    message = request.chat_message(
+        request.receipt_data(args), request.billing_data(config, "D01")
+    )
+    assert message.startswith(
+        "Hola, ¿me pueden apoyar con la facturación de este ticket?\n\nDatos del ticket:\n"
+    )
     assert "- Folio: 123456" in message
     assert "- Régimen fiscal: 614 - Ingresos por intereses" in message
     assert "- Correo: facturas@example.com" in message
@@ -230,10 +241,14 @@ def test_chat_message(import_script, config):
 )
 def test_whatsapp_link(import_script, number, expected):
     request = import_script("request_invoice")
-    link = request.whatsapp_link(number, "Hola, ¿me pueden apoyar?\n- Fecha: 2026-10-23")
+    link = request.whatsapp_link(
+        number, "Hola, ¿me pueden apoyar?\n- Fecha: 2026-10-23"
+    )
     prefix = "https://wa.me/%s?text=" % expected
     assert link.startswith(prefix)
-    assert unquote(link[len(prefix) :]) == "Hola, ¿me pueden apoyar?\n- Fecha: 2026-10-23"
+    assert (
+        unquote(link[len(prefix) :]) == "Hola, ¿me pueden apoyar?\n- Fecha: 2026-10-23"
+    )
 
 
 def test_build_email(import_script, config, tmp_path):
@@ -241,7 +256,9 @@ def test_build_email(import_script, config, tmp_path):
     photo = tmp_path / "photo.jpg"
     photo.write_bytes(b"jpeg")
     args = request_args(image=[photo], intro="El portal no encuentra el ticket.")
-    msg = request.build_email(config, args, request.receipt_data(args), request.billing_data(config, "S01"))
+    msg = request.build_email(
+        config, args, request.receipt_data(args), request.billing_data(config, "S01")
+    )
     assert msg["Subject"] == "Facturación de consumo del día 2026-10-23"
     assert msg["From"] == "Juan <juan@example.com>"
     text = msg.get_body(("plain",)).get_content()
@@ -249,13 +266,17 @@ def test_build_email(import_script, config, tmp_path):
     assert text.endswith("--\nSaludos\nJuan\n")
     html = msg.get_body(("html",)).get_content()
     assert "<li>Uso CFDI: S01 - Sin efectos fiscales</li>" in html
-    assert [part.get_filename() for part in msg.iter_attachments()] == ["ticket_2026-10-23.jpg"]
+    assert [part.get_filename() for part in msg.iter_attachments()] == [
+        "ticket_2026-10-23.jpg"
+    ]
 
 
 def test_build_email_with_reference(import_script, config):
     request = import_script("request_invoice")
     args = request_args(ref="12345")
-    msg = request.build_email(config, args, request.receipt_data(args), request.billing_data(config, "S01"))
+    msg = request.build_email(
+        config, args, request.receipt_data(args), request.billing_data(config, "S01")
+    )
     assert msg["Subject"] == "Facturación de consumo #12345"
     assert "- Referencia: 12345" in msg.get_body(("plain",)).get_content()
 
@@ -264,7 +285,12 @@ def test_build_email_csf_needs_configuration(import_script, config):
     request = import_script("request_invoice")
     args = request_args(csf=True)
     with pytest.raises(SystemExit, match="csf"):
-        request.build_email(config, args, request.receipt_data(args), request.billing_data(config, "S01"))
+        request.build_email(
+            config,
+            args,
+            request.receipt_data(args),
+            request.billing_data(config, "S01"),
+        )
 
 
 def test_farmacias_similares_receiver_rfc(import_script):

@@ -36,10 +36,17 @@ class Walmart(InvoicePortal):
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("--tc", required=True, help="TC#, the receipt number (22 digits)")
-        parser.add_argument("--tr", required=True, help="TR#, the transaction (5 digits)")
         parser.add_argument(
-            "--forma", required=True, choices=cls.payment_methods, help="payment method, as the portal names it"
+            "--tc", required=True, help="TC#, the receipt number (22 digits)"
+        )
+        parser.add_argument(
+            "--tr", required=True, help="TR#, the transaction (5 digits)"
+        )
+        parser.add_argument(
+            "--forma",
+            required=True,
+            choices=cls.payment_methods,
+            help="payment method, as the portal names it",
         )
 
     def ticket(self):
@@ -68,7 +75,9 @@ class Walmart(InvoicePortal):
         self.page.click("#form_btn_accept")
         self.page.wait_for_timeout(10000)
         if "/address" not in self.page.url:
-            raise PortalError("the portal did not accept the receipt: %s" % self.text()[:600])
+            raise PortalError(
+                "the portal did not accept the receipt: %s" % self.text()[:600]
+            )
         # "será necesario capturar nuevamente su información fiscal en cada solicitud"
         self.close_notice()
 
@@ -84,7 +93,8 @@ class Walmart(InvoicePortal):
         self.show(self.receiver_fields, width=24)
         if (
             self.page.input_value("#rfc") != self.receiver.rfc
-            or self.page.input_value("[id='Código Postal']") != self.receiver.postal_code
+            or self.page.input_value("[id='Código Postal']")
+            != self.receiver.postal_code
         ):
             raise PortalError("the prefilled RFC or postal code is not the receiver's")
 
@@ -99,14 +109,20 @@ class Walmart(InvoicePortal):
 
     def submit_02_payment(self):
         select = self.page.locator("select:visible").first
-        labels = [option.inner_text().strip() for option in select.locator("option").all()]
+        labels = [
+            option.inner_text().strip() for option in select.locator("option").all()
+        ]
         if self.args.forma not in labels:
-            raise PortalError("payment method %r not offered; options: %s" % (self.args.forma, labels))
+            raise PortalError(
+                "payment method %r not offered; options: %s" % (self.args.forma, labels)
+            )
         select.select_option(label=self.args.forma)
         self.page.wait_for_timeout(800)
         self.click_continue()
         self.page.wait_for_timeout(15000)
-        confirm = self.page.locator("button:has-text('Continuar'):visible, button:has-text('Aceptar'):visible")
+        confirm = self.page.locator(
+            "button:has-text('Continuar'):visible, button:has-text('Aceptar'):visible"
+        )
         if "/payment" in self.page.url and confirm.count():
             print("confirmation: %s" % self.text()[:300])
             confirm.last.click()
@@ -117,10 +133,14 @@ class Walmart(InvoicePortal):
         # "Facturar" stamps the invoice.
         if "/invoiceSelection" not in self.page.url:
             raise PortalError("the last step did not open: %s" % self.text()[:600])
-        inputs = self.page.locator("input[type=text]:visible, input[type=email]:visible").all()
+        inputs = self.page.locator(
+            "input[type=text]:visible, input[type=email]:visible"
+        ).all()
         emails = [field.input_value() for field in inputs]
         if self.args.email not in emails:
-            raise PortalError("the email to send to is %s, not %s" % (emails, self.args.email))
+            raise PortalError(
+                "the email to send to is %s, not %s" % (emails, self.args.email)
+            )
         self.page.locator("button:has-text('Facturar'):visible").first.click()
         self.page.wait_for_timeout(15000)
         print("url: %s" % self.page.url)

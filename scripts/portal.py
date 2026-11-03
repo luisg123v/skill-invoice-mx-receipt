@@ -55,7 +55,11 @@ class InvoicePortal:
     @classmethod
     def step_names(cls, prefix):
         """Return the names of the step methods with that prefix, in the order of their numbers."""
-        return sorted(name for name in dir(cls) if name.startswith(prefix) and callable(getattr(cls, name)))
+        return sorted(
+            name
+            for name in dir(cls)
+            if name.startswith(prefix) and callable(getattr(cls, name))
+        )
 
     @classmethod
     def submits(cls):
@@ -100,10 +104,14 @@ class InvoicePortal:
 
         A Uso CFDI that the regime doesn't admit, for example, is missing from the options.
         """
-        offered = [option.get_attribute("value") for option in self.page.query_selector_all(selector + " option")]
+        offered = [
+            option.get_attribute("value")
+            for option in self.page.query_selector_all(selector + " option")
+        ]
         if value not in offered:
             raise PortalError(
-                "%s %s not offered; options: %s" % (what, value, [option for option in offered if option])
+                "%s %s not offered; options: %s"
+                % (what, value, [option for option in offered if option])
             )
         self.page.select_option(selector, value)
 
@@ -123,19 +131,30 @@ class InvoicePortal:
         not the reduced headless build, and its user agent says "Chrome" instead of
         "HeadlessChrome". The flag hides `navigator.webdriver`, which some blocking services check.
         """
-        options = {"headless": True, "channel": "chromium", "args": ["--disable-blink-features=AutomationControlled"]}
+        options = {
+            "headless": True,
+            "channel": "chromium",
+            "args": ["--disable-blink-features=AutomationControlled"],
+        }
         if self.blocks_foreign_ips:
             if self.config.proxy:
                 self.config.open_proxy()
                 options["proxy"] = {"server": self.config.proxy}
             else:
-                print("NOTE: this portal blocks IPs outside Mexico and there is no proxy; browsing directly")
+                print(
+                    "NOTE: this portal blocks IPs outside Mexico and there is no proxy; browsing directly"
+                )
         browser = playwright.chromium.launch(**options)
         probe = browser.new_page()
-        user_agent = probe.evaluate("navigator.userAgent").replace("HeadlessChrome", "Chrome")
+        user_agent = probe.evaluate("navigator.userAgent").replace(
+            "HeadlessChrome", "Chrome"
+        )
         probe.close()
         context = browser.new_context(
-            locale="es-MX", viewport={"width": 1400, "height": 1200}, accept_downloads=True, user_agent=user_agent
+            locale="es-MX",
+            viewport={"width": 1400, "height": 1200},
+            accept_downloads=True,
+            user_agent=user_agent,
         )
         return browser, context.new_page()
 
@@ -168,14 +187,26 @@ class InvoicePortal:
     @classmethod
     def main(cls):
         parser = argparse.ArgumentParser(
-            description=sys.modules[cls.__module__].__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+            description=sys.modules[cls.__module__].__doc__,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
         )
         cls.add_arguments(parser)
         if cls.submits():
-            parser.add_argument("--uso", required=True, choices=CFDI_USAGES, metavar="USO", help="Uso CFDI, e.g. G03")
-            parser.add_argument("--email", help="where the portal sends the CFDI (default: from the configuration)")
             parser.add_argument(
-                "--send", action="store_true", help="issue the invoice; without it, only fill the portal"
+                "--uso",
+                required=True,
+                choices=CFDI_USAGES,
+                metavar="USO",
+                help="Uso CFDI, e.g. G03",
+            )
+            parser.add_argument(
+                "--email",
+                help="where the portal sends the CFDI (default: from the configuration)",
+            )
+            parser.add_argument(
+                "--send",
+                action="store_true",
+                help="issue the invoice; without it, only fill the portal",
             )
         parser.add_argument("--config", type=Path, help="configuration file")
         args = parser.parse_args()

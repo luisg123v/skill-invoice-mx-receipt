@@ -5,9 +5,6 @@ test = [
     "tomli; python_version < '3.11'",
 ]
 
-[tool.black]
-line-length = 119
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = [

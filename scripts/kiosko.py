@@ -69,7 +69,10 @@ class Kiosko(InvoicePortal):
         if not option.count():
             raise PortalError("%s %s not offered" % (what, value))
         option.first.click()
-        print("%-40s %r" % (what, dropdown.locator(".p-dropdown-label").inner_text().strip()))
+        print(
+            "%-40s %r"
+            % (what, dropdown.locator(".p-dropdown-label").inner_text().strip())
+        )
 
     def fill_01_receiver(self):
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
@@ -77,7 +80,9 @@ class Kiosko(InvoicePortal):
         self.page.get_by_role("button", name="Aceptar").click()
         # The portal looks up the RFC and fills the name, the postal code and the email it has for it,
         # so wait for it before typing them.
-        with self.page.expect_response(lambda response: "Catalogos/Cliente/" in response.url):
+        with self.page.expect_response(
+            lambda response: "Catalogos/Cliente/" in response.url
+        ):
             self.type_field("rfc", self.receiver.rfc)
         self.type_field("razonSocial", self.receiver.name)
         self.type_field("cp", self.receiver.postal_code)
@@ -86,7 +91,10 @@ class Kiosko(InvoicePortal):
         self.choose(0, self.regime(), "regime")
         self.choose(1, self.args.uso, "Uso CFDI")
         self.show(
-            ["input[formcontrolname=%s]" % name for name in ("rfc", "razonSocial", "cp", "correoElectronico")],
+            [
+                "input[formcontrolname=%s]" % name
+                for name in ("rfc", "razonSocial", "cp", "correoElectronico")
+            ],
             width=40,
         )
 
@@ -104,16 +112,28 @@ class Kiosko(InvoicePortal):
             field.press_sequentially(reference, delay=40)
             typed = "".join(field.input_value().split())
             if typed != reference:
-                raise PortalError("the reference field has %s instead of %s" % (typed, reference))
-            with self.page.expect_response(lambda response: "Facturacion/ReferenciaTicket" in response.url) as answer:
+                raise PortalError(
+                    "the reference field has %s instead of %s" % (typed, reference)
+                )
+            with self.page.expect_response(
+                lambda response: "Facturacion/ReferenciaTicket" in response.url
+            ) as answer:
                 self.page.get_by_role("button", name="Agregar").click()
             result = answer.value.json()
             ticket = result.get("modelo")
             if not result.get("estado") or not ticket:
-                raise PortalError("the portal did not accept the receipt: %s" % result.get("mensaje"))
-            print("ticket: folio %s, %s, importe %.2f" % (ticket["folio"], ticket["fecha"], ticket["importe"]))
+                raise PortalError(
+                    "the portal did not accept the receipt: %s" % result.get("mensaje")
+                )
+            print(
+                "ticket: folio %s, %s, importe %.2f"
+                % (ticket["folio"], ticket["fecha"], ticket["importe"])
+            )
             for line in ticket.get("detalle") or []:
-                print("  %s x %s = %.2f" % (line["cantidad"], line["articulo"], line["precioVenta"]))
+                print(
+                    "  %s x %s = %.2f"
+                    % (line["cantidad"], line["articulo"], line["precioVenta"])
+                )
             total += ticket["importe"]
             self.page.wait_for_timeout(1000)
         if len(references) > 1:

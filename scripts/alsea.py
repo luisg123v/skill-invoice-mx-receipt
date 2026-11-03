@@ -19,7 +19,11 @@ class Alsea(InvoicePortal):
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("--brand", default="Starbucks", help="value of ?opc= on the portal, e.g. Dominos")
+        parser.add_argument(
+            "--brand",
+            default="Starbucks",
+            help="value of ?opc= on the portal, e.g. Dominos",
+        )
         parser.add_argument("--ticket", required=True)
         parser.add_argument("--tienda", required=True)
         parser.add_argument("--fecha", required=True, help="dd/mm/yyyy")
@@ -29,7 +33,9 @@ class Alsea(InvoicePortal):
         return self.config.email_links or self.config.email
 
     def fill_01_ticket(self):
-        self.page.goto(self.url % self.args.brand, wait_until="networkidle", timeout=90000)
+        self.page.goto(
+            self.url % self.args.brand, wait_until="networkidle", timeout=90000
+        )
         self.page.fill("#rfc", self.receiver.rfc)
         self.page.fill("#ticket", self.args.ticket)
         self.page.fill("#tienda", self.args.tienda)
@@ -38,7 +44,9 @@ class Alsea(InvoicePortal):
         self.page.wait_for_timeout(6000)
         self.page.wait_for_load_state("networkidle", timeout=60000)
         if not self.page.query_selector("#persona"):
-            raise PortalError("the portal did not accept the receipt (see DIALOG above, if any)")
+            raise PortalError(
+                "the portal did not accept the receipt (see DIALOG above, if any)"
+            )
 
     def fill_02_receiver(self):
         self.page.select_option("#persona", "FISICA")

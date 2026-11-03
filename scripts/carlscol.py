@@ -18,15 +18,33 @@ class Carlscol(InvoicePortal):
     url = "https://carlscol.libellum.com.mx"
     # The ASP.NET page prefixes the id of every field.
     field_prefix = "#ctl00_cph_page_"
-    ticket_fields = ["txt_rfcbusqueda", "txt_fechaticket", "txt_montototal", "txt_numeroticket", "ddl_sucursales"]
-    receiver_fields = ["txt_razonsocial", "txt_email", "txt_cp", "ddl_regimenfiscal", "ddl_usocfdiconrfc"]
+    ticket_fields = [
+        "txt_rfcbusqueda",
+        "txt_fechaticket",
+        "txt_montototal",
+        "txt_numeroticket",
+        "ddl_sucursales",
+    ]
+    receiver_fields = [
+        "txt_razonsocial",
+        "txt_email",
+        "txt_cp",
+        "ddl_regimenfiscal",
+        "ddl_usocfdiconrfc",
+    ]
 
     @classmethod
     def add_arguments(cls, parser):
         parser.add_argument("--ticket", required=True, help="Ticket# on the receipt")
-        parser.add_argument("--fecha", required=True, help="dd/mm/yyyy; the receipt prints mm/dd/yyyy")
+        parser.add_argument(
+            "--fecha", required=True, help="dd/mm/yyyy; the receipt prints mm/dd/yyyy"
+        )
         parser.add_argument("--monto", required=True, help="TOTAL, e.g. 250.00")
-        parser.add_argument("--sucursal", required=True, help="branch name as the portal lists it, e.g. Zentralia")
+        parser.add_argument(
+            "--sucursal",
+            required=True,
+            help="branch name as the portal lists it, e.g. Zentralia",
+        )
 
     def field(self, name):
         """Return the selector of a field, by its id without the page's prefix."""
@@ -36,11 +54,20 @@ class Carlscol(InvoicePortal):
         """Return the option value of the branch, stopping unless exactly one matches."""
         branches = {
             option.inner_text().strip(): option.get_attribute("value")
-            for option in self.page.query_selector_all(self.field("ddl_sucursales") + " option")
+            for option in self.page.query_selector_all(
+                self.field("ddl_sucursales") + " option"
+            )
         }
-        match = [value for name, value in branches.items() if self.args.sucursal.lower() in name.lower()]
+        match = [
+            value
+            for name, value in branches.items()
+            if self.args.sucursal.lower() in name.lower()
+        ]
         if len(match) != 1:
-            raise PortalError("branch %r not found once; options: %s" % (self.args.sucursal, list(branches)))
+            raise PortalError(
+                "branch %r not found once; options: %s"
+                % (self.args.sucursal, list(branches))
+            )
         return match[0]
 
     def fill_01_ticket(self):
@@ -53,7 +80,9 @@ class Carlscol(InvoicePortal):
         self.page.fill(self.field("txt_rfcbusqueda"), self.receiver.rfc)
         # The date field is a read-only datepicker; set its value directly.
         self.page.evaluate(
-            "value => document.querySelector('%s').value = value" % self.field("txt_fechaticket"), self.args.fecha
+            "value => document.querySelector('%s').value = value"
+            % self.field("txt_fechaticket"),
+            self.args.fecha,
         )
         self.page.fill(self.field("txt_montototal"), self.args.monto)
         self.page.fill(self.field("txt_numeroticket"), self.args.ticket)
@@ -63,7 +92,9 @@ class Carlscol(InvoicePortal):
         self.page.wait_for_timeout(5000)
         self.page.wait_for_load_state("networkidle", timeout=60000)
         if "transaccion.aspx" not in self.page.url:
-            raise PortalError("the portal did not accept the receipt: %s" % self.text()[:600])
+            raise PortalError(
+                "the portal did not accept the receipt: %s" % self.text()[:600]
+            )
 
     def fill_02_receiver(self):
         # Choosing the regime posts the page back and reloads the Uso CFDI options.
@@ -82,7 +113,8 @@ class Carlscol(InvoicePortal):
         # loading after the regime postback, its onclick fails and the browser submits the form,
         # which issues the invoice. So wait for the page's scripts first.
         self.page.wait_for_function(
-            "typeof BotonConfirmacion === 'function' && typeof jQuery === 'function'", timeout=60000
+            "typeof BotonConfirmacion === 'function' && typeof jQuery === 'function'",
+            timeout=60000,
         )
         self.page.click(self.field("btn_facturar"))
         self.page.wait_for_timeout(2000)
