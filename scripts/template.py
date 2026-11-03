@@ -9,6 +9,10 @@ class, and replace the URL, the arguments and the selectors with the portal's. E
 of the portal is a method, numbered in the order the portal shows them. See the
 docstring of portal.py.
 
+Keep everything the script needs in its class, as methods or class attributes, including
+the checks of its arguments. For an argument with a fixed format, such as a folio, use
+`pattern_argument()` of portal.py.
+
 Usage:
     template.py --ticket 12345 --fecha 23/10/2026 --total 100.00 --uso G03 [--send]
 """
