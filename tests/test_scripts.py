@@ -22,6 +22,7 @@ PORTALS = {
     "farmacias_guadalajara": "FarmaciasGuadalajara",
     "farmacias_similares": "FarmaciasSimilares",
     "kiosko": "Kiosko",
+    "la_marina": "LaMarina",
     "liverpool": "Liverpool",
     "miniso": "Miniso",
     "oxxo": "Oxxo",
@@ -98,6 +99,19 @@ def test_load_config_one_last_name(import_script, config_path):
     receiver = import_script("config").Config.load(config_path).receiver
     assert receiver.last_names == "PEREZ"
     assert receiver.name == "JUAN PEREZ"
+
+
+def test_load_config_address(import_script, config_path):
+    config_path.write_text(
+        config_path.read_text().replace(
+            'regimes = ["626", "614"]\n',
+            'regimes = ["626", "614"]\n'
+            'mobile_phone = "5500000000"\nstate = "Jalisco"\n',
+        )
+    )
+    receiver = import_script("config").Config.load(config_path).receiver
+    assert (receiver.mobile_phone, receiver.state) == ("5500000000", "Jalisco")
+    assert receiver.street == ""
 
 
 def test_load_config_unknown_regime(import_script, config_path):
@@ -220,6 +234,31 @@ def test_pattern_argument_invalid(import_script):
     check = import_script("portal").pattern_argument(pattern=r"\d{3}", error="wrong")
     with pytest.raises(argparse.ArgumentTypeError, match="wrong, not '1012'"):
         check("1012")
+
+
+def la_marina_folio(import_script, value):
+    parser = argparse.ArgumentParser()
+    import_script("la_marina").LaMarina.add_arguments(parser)
+    args = [
+        "--tienda",
+        "La Marina Zapotlán",
+        "--fecha",
+        "2026-11-01",
+        "--forma-pago",
+        "04",
+    ]
+    return parser.parse_args(args + ["--folio", value]).folio
+
+
+@pytest.mark.parametrize("value", ["101-2345", " 101 - 2345 "])
+def test_la_marina_folio(import_script, value):
+    assert la_marina_folio(import_script, value) == ("101", "2345")
+
+
+@pytest.mark.parametrize("value", ["1012345", "101-", "A01-2345"])
+def test_la_marina_folio_invalid(import_script, value):
+    with pytest.raises(SystemExit):
+        la_marina_folio(import_script, value)
 
 
 def request_args(**values):

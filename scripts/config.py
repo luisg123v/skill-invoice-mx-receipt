@@ -122,6 +122,16 @@ class Receiver:
     regimes: list
     # Some people have only one last name.
     maternal_last_name: str = ""
+    # Only some portals ask for the mobile phone and the full address. The locality is
+    # the city as the SAT's catalog names it, such as "Ciudad Guzmán" for the
+    # municipality of Zapotlán el Grande.
+    mobile_phone: str = ""
+    state: str = ""
+    municipality: str = ""
+    locality: str = ""
+    neighborhood: str = ""
+    street: str = ""
+    exterior_number: str = ""
 
     @property
     def last_names(self):

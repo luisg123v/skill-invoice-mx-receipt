@@ -35,6 +35,16 @@ postal_code = "00000"
 # its Uso CFDI admits; for example, with ["626", "614"], D01 gets 614 because RESICO doesn't admit
 # personal deductions.
 regimes = ["626"]
+# Only some portals ask for the mobile phone and the full address; fill them if you use one
+# (see each portal's reference). The locality is the city as the SAT's catalog names it, which
+# can differ from the municipality, such as Ciudad Guzmán in Zapotlán el Grande.
+# mobile_phone = "3410000000"
+# state = "Jalisco"
+# municipality = "Zapotlán el Grande"
+# locality = "Ciudad Guzmán"
+# neighborhood = "Centro"
+# street = "Madero"
+# exterior_number = "10"
 
 # Which Uso CFDI to give each kind of purchase. The agent asks for anything not listed here.
 [cfdi_usages]

@@ -54,6 +54,9 @@ class InvoicePortal:
     blocks_foreign_ips = False
     # Portals don't always write all the accents, such as "Adquisición de mercancias".
     accents = str.maketrans("áéíóúü", "aeiouu")
+    # The optional fields of the receiver that the portal asks for, such as
+    # "mobile_phone".
+    receiver_fields = ()
 
     def __init__(self, args, config):
         self.args = args
@@ -236,6 +239,15 @@ class InvoicePortal:
         parser.add_argument("--config", type=Path, help="configuration file")
         args = parser.parse_args()
         config = Config.load(args.config)
+        missing = [
+            "receiver." + name
+            for name in cls.receiver_fields
+            if not getattr(config.receiver, name)
+        ]
+        if missing:
+            raise SystemExit(
+                "ABORT: this portal needs %s in the configuration" % ", ".join(missing)
+            )
         if cls.submits():
             # Stop before opening the browser when no regime of the receiver admits the
             # use.
