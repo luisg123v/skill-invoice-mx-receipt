@@ -14,8 +14,8 @@ Usage:
 import datetime
 import sys
 
-from playwright.sync_api import Error as PlaywrightError
 from config import CFDI_USAGES, REGIMES
+from playwright.sync_api import Error as PlaywrightError
 from portal import InvoicePortal, PortalError
 
 
