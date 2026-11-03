@@ -8,21 +8,9 @@ Usage:
     liverpool.py --codigo "ABCDE FGH1J KLMNO PQRST" --total 100.00 --uso S01 [--send]
 """
 
-import argparse
-import re
 import sys
 
-from portal import InvoicePortal, PortalError
-
-
-def billing_code(value):
-    """Return the invoicing code without spaces, stopping when it isn't one."""
-    code = "".join(value.split()).upper()
-    if not re.fullmatch(r"[A-Z0-9]{20}", code):
-        raise argparse.ArgumentTypeError(
-            "the invoicing code should have 20 letters and digits, not %r" % value
-        )
-    return code
+from portal import InvoicePortal, PortalError, pattern_argument
 
 
 class Liverpool(InvoicePortal):
@@ -34,15 +22,22 @@ class Liverpool(InvoicePortal):
         parser.add_argument(
             "--codigo",
             required=True,
-            type=billing_code,
+            type=pattern_argument(
+                pattern=r"(?:\s*[A-Za-z0-9]){20}\s*",
+                error="the invoicing code should have 20 letters and digits",
+            ),
             help='the 20 characters under "Código de facturación", in groups of 5',
         )
         parser.add_argument(
             "--total", required=True, help="the receipt's total, with cents"
         )
 
+    def billing_code(self):
+        """Return the invoicing code without the spaces between its groups."""
+        return "".join(self.args.codigo.split()).upper()
+
     def ticket(self):
-        return self.args.codigo
+        return self.billing_code()
 
     def choose(self, name, value, what):
         """Pick an option of a dropdown, stopping when the portal doesn't offer it."""
@@ -61,7 +56,7 @@ class Liverpool(InvoicePortal):
 
     def fill_01_ticket(self):
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
-        self.page.fill("input[name=billingCode]", self.args.codigo)
+        self.page.fill("input[name=billingCode]", self.billing_code())
         self.page.fill("input[name=amount]", self.args.total)
         self.page.click("button:has-text('Buscar ticket')")
         self.page.wait_for_timeout(6000)

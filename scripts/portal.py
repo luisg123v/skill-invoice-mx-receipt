@@ -9,6 +9,7 @@ runs the submit steps with `--send`, so a run without it never issues anything.
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -22,6 +23,22 @@ class PortalError(Exception):
 
 class PortalDone(Exception):
     """The run ends early with nothing left to do, as for a receipt already invoiced."""
+
+
+def pattern_argument(pattern, error):
+    """Return an argument type that accepts only the values that match the pattern.
+
+    A pattern with groups turns the value into its groups, such as the terminal and the
+    transaction of a folio. Otherwise the value stays as it is.
+    """
+
+    def check(value):
+        match = re.fullmatch(pattern, value)
+        if not match:
+            raise argparse.ArgumentTypeError("%s, not %r" % (error, value))
+        return match.groups() or value
+
+    return check
 
 
 class InvoicePortal:

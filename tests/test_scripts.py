@@ -10,6 +10,7 @@ import importlib
 import socket
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.parse import unquote
 
 import pytest
@@ -191,13 +192,34 @@ def test_kiosko_receipts_limit(import_script):
     ],
 )
 def test_liverpool_billing_code(import_script, value, expected):
-    assert import_script("liverpool").billing_code(value) == expected
+    liverpool = import_script("liverpool").Liverpool
+    parser = argparse.ArgumentParser()
+    liverpool.add_arguments(parser)
+    args = parser.parse_args(["--codigo", value, "--total", "100.00"])
+    assert liverpool.billing_code(SimpleNamespace(args=args)) == expected
 
 
 @pytest.mark.parametrize("value", ["ABCDE FGH1J KLMNO", "ABCDE FGH1J KLMNO PQRS-"])
 def test_liverpool_billing_code_invalid(import_script, value):
-    with pytest.raises(argparse.ArgumentTypeError):
-        import_script("liverpool").billing_code(value)
+    parser = argparse.ArgumentParser()
+    import_script("liverpool").Liverpool.add_arguments(parser)
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--codigo", value, "--total", "100.00"])
+
+
+@pytest.mark.parametrize(
+    "pattern, value, expected",
+    [(r"(\d+)-(\d+)", "101-2345", ("101", "2345")), (r"\d{3}", "101", "101")],
+)
+def test_pattern_argument(import_script, pattern, value, expected):
+    check = import_script("portal").pattern_argument(pattern=pattern, error="wrong")
+    assert check(value) == expected
+
+
+def test_pattern_argument_invalid(import_script):
+    check = import_script("portal").pattern_argument(pattern=r"\d{3}", error="wrong")
+    with pytest.raises(argparse.ArgumentTypeError, match="wrong, not '1012'"):
+        check("1012")
 
 
 def request_args(**values):
