@@ -19,6 +19,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 PORTALS = {
     "alsea": "Alsea",
     "carlscol": "Carlscol",
+    "cerveceria_de_la_costa": "CerveceriaDeLaCosta",
     "farmacias_guadalajara": "FarmaciasGuadalajara",
     "farmacias_similares": "FarmaciasSimilares",
     "kiosko": "Kiosko",
@@ -259,6 +260,24 @@ def test_la_marina_folio(import_script, value):
 def test_la_marina_folio_invalid(import_script, value):
     with pytest.raises(SystemExit):
         la_marina_folio(import_script, value)
+
+
+def test_cerveceria_de_la_costa_tickets(import_script, config):
+    portal = import_script("cerveceria_de_la_costa").CerveceriaDeLaCosta
+    parser = argparse.ArgumentParser()
+    portal.add_arguments(parser)
+    args = parser.parse_args(
+        ["--ticket", "123", "--total", "1.00", "--ticket", "456", "--total", "2.00"]
+    )
+    assert (args.ticket, args.total) == (["123", "456"], ["1.00", "2.00"])
+    assert portal(args, config).ticket() == "123-456"
+
+
+def test_cerveceria_de_la_costa_one_total_per_ticket(import_script, config):
+    portal = import_script("cerveceria_de_la_costa").CerveceriaDeLaCosta
+    args = SimpleNamespace(ticket=["123", "456"], total=["1.00"])
+    with pytest.raises(SystemExit, match="one --total for each --ticket"):
+        portal(args, config)
 
 
 def request_args(**values):
