@@ -4,7 +4,8 @@
   of the receipt (not Farmacias de Similares, S.A. de C.V.)
 - **Portal:** SimiFactura,
   https://facturacion.gpupm.com/simifactura/portal
-- **Script:** `farmacias_similares.py`
+- **Script:**
+  [`farmacias_similares.py`](../scripts/farmacias_similares.py)
 
 The page that farmaciasdesimilares.com links as "Facturación" explains the invoicing of online
 orders, which goes by email to facturaelectronica@fsimilares.com, and links SimiFactura for

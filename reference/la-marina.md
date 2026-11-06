@@ -3,7 +3,8 @@
 - **Issuer:** BODESA SAPI DE CV
 - **RFC:** `BOD9809059Z6`
 - **Portal:** https://servicios.lamarina.com.mx/Facturacion
-- **Script:** `la_marina.py`
+- **Script:**
+  [`la_marina.py`](../scripts/la_marina.py)
 
 La Marina is a department store chain of western Mexico (Colima, Jalisco, Michoacán, Guanajuato).
 The portal is linked as "Facturación" in the footer of www.lamarina.com.mx. It also invoices online

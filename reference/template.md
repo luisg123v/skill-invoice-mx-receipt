@@ -3,7 +3,8 @@
 - **Issuer:** <name as in the CFDI>
 - **RFC:** `<RFC>`
 - **Portal:** <URL>
-- **Script:** `<store>.py`
+- **Script:**
+  [`<store>.py`](../scripts/<store>.py)
 
 <Anything the reader needs before the details: other portals of the same store, a page that
 links to the real portal, the brands it covers.>
