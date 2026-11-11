@@ -56,7 +56,7 @@ class InvoicePortal:
     accents = str.maketrans("áéíóúü", "aeiouu")
     # The optional fields of the receiver that the portal asks for, such as
     # "mobile_phone".
-    receiver_fields = ()
+    required_receiver_fields = ()
 
     def __init__(self, args, config):
         self.args = args
@@ -241,7 +241,7 @@ class InvoicePortal:
         config = Config.load(args.config)
         missing = [
             "receiver." + name
-            for name in cls.receiver_fields
+            for name in cls.required_receiver_fields
             if not getattr(config.receiver, name)
         ]
         if missing:

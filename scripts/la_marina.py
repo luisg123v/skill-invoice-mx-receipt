@@ -22,7 +22,7 @@ from portal import InvoicePortal, PortalDone, PortalError, pattern_argument
 class LaMarina(InvoicePortal):
     name = "la_marina"
     url = "https://servicios.lamarina.com.mx/Facturacion"
-    receiver_fields = (
+    required_receiver_fields = (
         "mobile_phone",
         "state",
         "municipality",

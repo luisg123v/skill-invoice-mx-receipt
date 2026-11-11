@@ -9,6 +9,7 @@ import argparse
 import importlib
 import socket
 import sys
+from dataclasses import fields
 from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import unquote
@@ -189,6 +190,17 @@ def test_portal_steps(import_script, module, class_name):
     assert all(len(number) == 2 for number in numbers)
     assert len(set(fill)) == len({name.split("_")[1] for name in fill})
     assert portal.submits()
+
+
+@pytest.mark.parametrize(("module", "class_name"), PORTALS.items())
+def test_required_receiver_fields_exist(import_script, module, class_name):
+    """Each name in a portal's `required_receiver_fields` is a field of `Receiver`."""
+    portal = getattr(import_script(module), class_name)
+    receiver_field_names = {
+        item.name for item in fields(import_script("config").Receiver)
+    }
+    not_in_receiver = set(portal.required_receiver_fields) - receiver_field_names
+    assert not not_in_receiver
 
 
 def test_kiosko_receipts_limit(import_script):
