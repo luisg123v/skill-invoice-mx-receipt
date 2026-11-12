@@ -158,6 +158,9 @@ store goes the same way and a mistake in the exploration can't issue a wrong CFD
 3. Fill each step and print what the fields have before moving on. Read-only datepickers,
    messages that fade out, and fields that only appear after another choice are common. Stop
    before the button that issues the invoice.
+   Note what the portal shows when it accepts each step and when it doesn't, because the script
+   waits for one of the two instead of a fixed time. A portal can take several times longer than
+   usual to answer.
 4. Copy
    [`scripts/template.py`](scripts/template.py)
    to `scripts/<store>.py` and write one method per step of the portal.

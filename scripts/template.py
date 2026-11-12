@@ -13,13 +13,17 @@ Keep everything the script needs in its class, as methods or class attributes, i
 the checks of its arguments. For an argument with a fixed format, such as a folio, use
 `pattern_argument()` of portal.py.
 
+After each click, wait for the portal's answer with `wait_for_answer()`, not for a fixed
+time. A portal that takes longer than usual would make the script stop, or go on with a
+page that isn't ready.
+
 Usage:
     template.py --ticket 12345 --fecha 23/10/2026 --total 100.00 --uso G03 [--send]
 """
 
 import sys
 
-from portal import InvoicePortal, PortalError
+from portal import InvoicePortal
 
 
 class Template(InvoicePortal):
@@ -38,28 +42,24 @@ class Template(InvoicePortal):
         self.page.fill("#fecha", self.args.fecha)
         self.page.fill("#total", self.args.total)
         self.page.click("button[type=submit]")
-        self.page.wait_for_load_state("networkidle", timeout=60000)
         # When the portal doesn't move on, its message says why: already invoiced, not
         # found yet...
-        if not self.page.is_visible("#rfc"):
-            raise PortalError(
-                "the portal did not accept the receipt: %s" % self.text()[:600]
-            )
+        self.wait_for_answer("#rfc", errors=[".alert-danger"])
 
     def fill_02_receiver(self):
         self.page.fill("#rfc", self.receiver.rfc)
         self.page.fill("#nombre", self.receiver.name)
         self.page.fill("#cp", self.receiver.postal_code)
         self.page.select_option("#regimen", self.regime())
-        # The Uso CFDI options usually load after the regime.
-        self.page.wait_for_timeout(2000)
+        # The Uso CFDI options usually load after the regime, and select_offered() waits
+        # for them.
         self.select_offered("#uso", self.args.uso, "Uso CFDI")
         self.page.fill("#email", self.args.email)
         self.show(["#rfc", "#nombre", "#cp", "#regimen", "#uso", "#email"])
 
     def submit_01_invoice(self):
         self.page.click("button:has-text('Facturar')")
-        self.page.wait_for_timeout(10000)
+        self.wait_for_answer(".result", errors=[".alert-danger"], timeout=120)
         print("RESULT: %s" % self.text()[:1200])
 
 

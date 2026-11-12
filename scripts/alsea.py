@@ -12,7 +12,7 @@ Usage:
 
 import sys
 
-from portal import InvoicePortal, PortalError
+from portal import InvoicePortal
 
 
 class Alsea(InvoicePortal):
@@ -43,12 +43,8 @@ class Alsea(InvoicePortal):
         self.page.fill("#tienda", self.args.tienda)
         self.page.fill("#dtFecha", self.args.fecha)
         self.page.click("button[type=submit]")
-        self.page.wait_for_timeout(6000)
-        self.page.wait_for_load_state("networkidle", timeout=60000)
-        if not self.page.query_selector("#persona"):
-            raise PortalError(
-                "the portal did not accept the receipt (see DIALOG above, if any)"
-            )
+        # The portal reports a receipt it doesn't take in a dialog.
+        self.wait_for_answer("#persona")
 
     def fill_02_receiver(self):
         self.page.select_option("#persona", "FISICA")
@@ -59,7 +55,6 @@ class Alsea(InvoicePortal):
         self.page.fill("#codigoPostal", self.receiver.postal_code)
         self.page.select_option("#regimenFiscal", self.regime())
         # The Uso CFDI options load after the regime is chosen.
-        self.page.wait_for_timeout(3000)
         self.select_offered("#usoCfdi", self.args.uso, "Uso CFDI")
         self.page.fill("#correoElectronico", self.args.email)
         self.page.wait_for_timeout(1000)
@@ -78,7 +73,9 @@ class Alsea(InvoicePortal):
 
     def submit_01_invoice(self):
         self.page.click("button:has-text('Enviar')")
-        self.page.wait_for_timeout(9000)
+        self.wait_for_answer(
+            "text=Muchas gracias por usar nuestro servicio", timeout=120
+        )
         print("RESULT: %s" % self.text()[:600])
 
 

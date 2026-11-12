@@ -32,6 +32,9 @@ class Liverpool(InvoicePortal):
             "--total", required=True, help="the receipt's total, with cents"
         )
 
+    # The portal's error messages; its notes are alerts too, in another color.
+    error_message = ".MuiAlert-colorError"
+
     def billing_code(self):
         """Return the invoicing code without the spaces between its groups."""
         return "".join(self.args.codigo.split()).upper()
@@ -59,24 +62,24 @@ class Liverpool(InvoicePortal):
         self.page.fill("input[name=billingCode]", self.billing_code())
         self.page.fill("input[name=amount]", self.args.total)
         self.page.click("button:has-text('Buscar ticket')")
-        self.page.wait_for_timeout(6000)
-        if "Ticket encontrado" not in self.text():
-            raise PortalError(
-                "the portal did not find the receipt: %s" % self.text()[:800]
-            )
+        self.wait_for_answer("text=Ticket encontrado", errors=[self.error_message])
         self.show(["input[name=billingCode]", "input[name=amount]"])
 
     def fill_02_receiver(self):
         self.page.fill("input[name=rfc]", self.receiver.rfc)
         self.page.click("button:has-text('Continuar') >> nth=0")
-        self.page.wait_for_timeout(5000)
         # When the RFC has invoiced before, the portal lists the data it keeps for it,
         # and the fields stay disabled until one is selected. The script then writes
         # every field again, because that data can be out of date.
-        if self.page.is_visible("text=Seleccionar"):
+        name_field_enabled = "input[name=firstName]:enabled"
+        self.wait_for_answer(
+            ":text('Seleccionar'), %s" % name_field_enabled,
+            errors=[self.error_message],
+        )
+        if self.page.is_visible(":text('Seleccionar')"):
             print("SAVED DATA: %s" % self.text(".MuiModal-root"))
             self.page.click("text=Seleccionar >> nth=0")
-            self.page.wait_for_timeout(2500)
+            self.page.locator(name_field_enabled).wait_for()
         self.page.check("input[name=persona][value=fisica]")
         self.choose("regime", self.regime(), "Régimen fiscal")
         # The Uso CFDI options depend on the regime.
@@ -108,8 +111,12 @@ class Liverpool(InvoicePortal):
         print("SUMMARY: %s" % self.text("[role=dialog]"))
 
     def submit_01_invoice(self):
-        self.page.click("[role=dialog] button:has-text('Generar factura')")
-        self.page.wait_for_timeout(15000)
+        generate_button = self.page.locator(
+            "[role=dialog] button:has-text('Generar factura')"
+        )
+        generate_button.click()
+        generate_button.wait_for(state="hidden", timeout=120000)
+        self.page.wait_for_load_state("networkidle", timeout=120000)
         # The portal finds a receipt already invoiced like any other, and only says so
         # here.
         if "ya fue facturado" in self.text():

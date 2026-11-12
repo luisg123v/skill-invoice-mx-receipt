@@ -62,22 +62,16 @@ class Miniso(InvoicePortal):
                 "month?)" % (picked, self.args.fecha)
             )
         self.page.click("text=Buscar")
-        self.page.wait_for_timeout(8000)
-        if not self.page.is_visible("#continue_button"):
-            raise PortalError(
-                "the portal did not find the receipt: %s" % self.text()[:600]
-            )
+        # A receipt it doesn't find opens a window ("Ticket no encontrado").
+        self.wait_for_answer("#continue_button", errors=[".card.modal h1.error"])
 
     def fill_02_receiver(self):
         self.page.click("#continue_button")
-        self.page.wait_for_timeout(4000)
-        if not self.page.is_visible(self.field("rfc")):
-            raise PortalError("unexpected page after Continuar: %s" % self.text()[:600])
+        self.wait_for_answer(self.field("rfc"))
         self.page.fill(self.field("rfc"), self.receiver.rfc)
         self.page.fill(self.field("name"), self.receiver.name)
         self.page.fill(self.field("zip_code"), self.receiver.postal_code)
         self.select_offered(self.field("tax_regime"), self.regime(), "Regime")
-        self.page.wait_for_timeout(1500)
         self.select_offered(self.field("document_use"), self.args.uso, "Uso CFDI")
         self.page.fill(self.field("email"), self.args.email)
         self.page.fill(self.field("confirm_email"), self.args.email)
@@ -89,10 +83,10 @@ class Miniso(InvoicePortal):
 
     def submit_01_invoice(self):
         self.page.click("#billing_button")
-        self.page.wait_for_timeout(12000)
         # The answer comes in a modal ("Éxito: Se ha generado la factura <uuid> ...").
         # The page text also has the hidden options of the form, so read only the
         # visible dialog.
+        self.wait_for_answer(".modal, [role=dialog], .swal2-popup", timeout=120)
         dialogs = [
             dialog
             for dialog in self.page.query_selector_all(

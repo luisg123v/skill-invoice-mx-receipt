@@ -396,3 +396,60 @@ def test_farmacias_similares_receiver_rfc(import_script):
     )
     assert receiver_rfc(cfdi) == "PEMJ800101AB1"
     assert receiver_rfc(cfdi.replace(b"<cfdi:Receptor", b"<cfdi:Otro")) is None
+
+
+class FakePage:
+    """A page whose elements show up after some checks, as a slow portal's do."""
+
+    def __init__(self, elements, after=0):
+        self.elements = elements
+        self.checks_left = after
+
+    def locator(self, selector):
+        found = [] if self.checks_left else [self.elements.get(selector)]
+        return SimpleNamespace(
+            filter=lambda visible: SimpleNamespace(
+                count=lambda: len([text for text in found if text]),
+                first=SimpleNamespace(inner_text=lambda: found[0]),
+            )
+        )
+
+    def wait_for_timeout(self, _milliseconds):
+        self.checks_left -= 1
+
+    def inner_text(self, _selector):
+        return "Buscando ticket..."
+
+
+def portal_on(import_script, page):
+    portal = import_script("template").Template.__new__(
+        import_script("template").Template
+    )
+    portal.page = page
+    portal.dialogs = []
+    return portal
+
+
+def test_wait_for_answer_slow_portal(import_script):
+    page = FakePage({"#rfc": "RFC"}, after=3)
+    portal_on(import_script, page).wait_for_answer("#rfc")
+    assert page.checks_left == 0
+
+
+def test_wait_for_answer_error(import_script):
+    portal = portal_on(import_script, FakePage({".alert": " Ticket  no encontrado "}))
+    with pytest.raises(Exception, match="^Ticket no encontrado$"):
+        portal.wait_for_answer("#rfc", errors=(".alert",))
+
+
+def test_wait_for_answer_dialog(import_script):
+    portal = portal_on(import_script, FakePage({}, after=5))
+    portal.page.wait_for_timeout = lambda _ms: portal.dialogs.append("Ya facturado")
+    with pytest.raises(Exception, match="the portal answered: Ya facturado"):
+        portal.wait_for_answer("#rfc")
+
+
+def test_wait_for_answer_timeout(import_script):
+    portal = portal_on(import_script, FakePage({}))
+    with pytest.raises(Exception, match="didn't answer in 0 seconds: Buscando"):
+        portal.wait_for_answer("#rfc", timeout=0)

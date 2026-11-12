@@ -16,6 +16,7 @@ Usage:
 
 import sys
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from portal import InvoicePortal, PortalDone, PortalError, pattern_argument
 
 
@@ -61,8 +62,9 @@ class LaMarina(InvoicePortal):
     def next_section(self, number):
         """Press "Continuar" in a section, which checks it and opens the next one."""
         self.page.click("#fi-acc-%d button:has-text('Continuar')" % number)
-        self.page.wait_for_timeout(1000)
-        if not self.page.is_visible("#fi-acc-%d" % (number + 1)):
+        try:
+            self.page.locator("#fi-acc-%d" % (number + 1)).wait_for(timeout=15000)
+        except PlaywrightTimeoutError:
             raise PortalError(
                 "the portal did not accept the section %d: %s"
                 % (number, self.text("#fi-acc-%d" % number))
@@ -195,11 +197,10 @@ class LaMarina(InvoicePortal):
     def fill_05_review(self):
         """Open the portal's summary, the last step before it issues the invoice."""
         self.page.click("#btn-sendit")
-        self.page.wait_for_timeout(2000)
-        if not self.page.is_visible(".swal2-popup:has-text('Confirmar datos')"):
-            raise PortalError(
-                "the portal did not show the summary: %s" % self.text("body")[-800:]
-            )
+        # Any other notice is the portal's reason not to go on.
+        self.wait_for_answer(
+            ".swal2-popup:has-text('Confirmar datos')", errors=[".swal2-popup"]
+        )
         print("SUMMARY: %s" % self.text(".swal2-popup"))
 
     def submit_01_invoice(self):

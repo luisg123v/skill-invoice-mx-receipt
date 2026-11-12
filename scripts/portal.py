@@ -11,6 +11,7 @@ runs the submit steps with `--send`, so a run without it never issues anything.
 import argparse
 import re
 import sys
+import time
 from pathlib import Path
 
 from config import CFDI_USAGES, Config
@@ -64,6 +65,8 @@ class InvoicePortal:
         self.receiver = config.receiver
         self.out = config.receipt_folder(self.name, self.ticket())
         self.page = None
+        # The messages of the portal's dialogs, in the order they opened.
+        self.dialogs = []
 
     @classmethod
     def add_arguments(cls, parser):
@@ -122,16 +125,25 @@ class InvoicePortal:
         """Return a text in lowercase and without accents, to compare it."""
         return text.strip().lower().translate(self.accents)
 
-    def select_offered(self, selector, value, what):
-        """Select a value, stopping when the portal doesn't offer it.
-
-        A Uso CFDI that the regime doesn't admit, for example, is missing from the
-        options.
-        """
-        offered = [
+    def option_values(self, selector):
+        """Return the values of a select's options."""
+        return [
             option.get_attribute("value")
             for option in self.page.query_selector_all(selector + " option")
         ]
+
+    def select_offered(self, selector, value, what, timeout=15):
+        """Select a value, stopping when the portal doesn't offer it.
+
+        A Uso CFDI that the regime doesn't admit, for example, is missing from the
+        options. Some portals load the options after another choice, so it waits up to
+        `timeout` seconds for the value to show up.
+        """
+        deadline = time.monotonic() + timeout
+        offered = self.option_values(selector)
+        while value not in offered and time.monotonic() < deadline:
+            self.page.wait_for_timeout(500)
+            offered = self.option_values(selector)
         if value not in offered:
             raise PortalError(
                 "%s %s not offered; options: %s"
@@ -145,8 +157,35 @@ class InvoicePortal:
         Many portals report errors this way, and Playwright would dismiss them without a
         trace. Dismissing answers "No" to offers such as resending the invoice.
         """
-        print("DIALOG: %s" % " ".join(dialog.message.split()))
+        message = " ".join(dialog.message.split())
+        print("DIALOG: %s" % message)
+        self.dialogs.append(message)
         dialog.dismiss()
+
+    def wait_for_answer(self, expected, errors=(), timeout=60):
+        """Wait for the portal's answer to an action, instead of waiting a fixed time.
+
+        It returns as soon as `expected` (a selector) is visible. It stops with the
+        portal's message when one of `errors` (selectors) is visible or a dialog opens,
+        and after `timeout` seconds with the page's text.
+        """
+        dialog_count = len(self.dialogs)
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self.page.locator(expected).filter(visible=True).count():
+                return
+            for error in errors:
+                error_message = self.page.locator(error).filter(visible=True)
+                if error_message.count():
+                    raise PortalError(
+                        " ".join(error_message.first.inner_text().split())
+                    )
+            if len(self.dialogs) > dialog_count:
+                raise PortalError("the portal answered: %s" % self.dialogs[-1])
+            self.page.wait_for_timeout(500)
+        raise PortalError(
+            "the portal didn't answer in %d seconds: %s" % (timeout, self.text()[:600])
+        )
 
     def launch(self, playwright):
         """Open Chromium without a window, through the proxy if the portal blocks

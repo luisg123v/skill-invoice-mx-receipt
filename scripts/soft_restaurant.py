@@ -18,13 +18,16 @@ Usage:
 import re
 import sys
 
-from portal import InvoicePortal, PortalError
+from portal import InvoicePortal, PortalDone, PortalError
 
 
 class SoftRestaurant(InvoicePortal):
     name = "softrestaurant"
     url = "https://facturacion.softrestaurant.com/%s"
     customer_form = "#OpenModalAddCustomer "
+    next_button = (
+        "button:has-text('Siguiente'):visible, a:has-text('Siguiente'):visible"
+    )
     customer_fields = [
         "#RFC",
         "#ListTaxRegimes",
@@ -69,14 +72,18 @@ class SoftRestaurant(InvoicePortal):
         self.page.fill("#unicCode", self.args.codigo)
         self.page.fill("#RFC", self.receiver.rfc)
         self.page.click("button[type=submit]:has-text('FACTURAR')")
-        try:
-            self.page.wait_for_url("**/Invoice/Ticket**", timeout=60000)
-        except Exception:
-            raise PortalError(
-                "the portal did not accept the receipt: %s"
-                % (self.visible_messages() or self.text()[:400])
-            )
-        self.page.wait_for_timeout(4000)
+        # The ticket's page shows a notice, the customer form or, for a saved customer,
+        # the button to go on. A receipt already invoiced shows its CFDI instead, and
+        # one the portal doesn't find gets a message under the form ("No se encontró el
+        # ticket").
+        invoiced_notice = ":text('Ya puedes descargar tu factura')"
+        self.wait_for_answer(
+            "#acceptFeedback, %s#Name, %s, %s"
+            % (self.customer_form, self.next_button, invoiced_notice),
+            errors=["#captchamessage:not(:empty)", ".alert-danger", ".swal2-popup"],
+        )
+        if self.page.is_visible(invoiced_notice):
+            raise PortalDone("already invoiced: %s" % self.text()[:300])
 
     def fill_02_customer(self):
         # A notice about CFDI 4.0 opens first; then, for an RFC the restaurant doesn't
@@ -84,7 +91,7 @@ class SoftRestaurant(InvoicePortal):
         # buttons are hidden.
         if self.page.is_visible("#acceptFeedback"):
             self.page.click("#acceptFeedback")
-            self.page.wait_for_timeout(1500)
+            self.wait_for_answer("%s#Name, %s" % (self.customer_form, self.next_button))
         if not self.page.is_visible(self.customer_form + "#Name"):
             print(
                 "WARNING: no customer form; the portal reused a saved customer. Check "
@@ -92,39 +99,39 @@ class SoftRestaurant(InvoicePortal):
             )
             return
         self.page.select_option(self.customer_form + "#ListTaxRegimes", self.regime())
-        self.page.wait_for_timeout(1500)
         self.page.fill(self.customer_form + "#Name", self.receiver.name)
         self.page.fill(self.customer_form + "#Email", self.args.email)
         self.page.fill(
             self.customer_form + "#CustomerAddress_Code", self.receiver.postal_code
         )
-        self.page.select_option(self.customer_form + "#usecode", self.args.uso)
+        # The Uso CFDI options load after the regime is chosen.
+        self.select_offered(self.customer_form + "#usecode", self.args.uso, "Uso CFDI")
         self.show(
             [self.customer_form + selector for selector in self.customer_fields],
             width=44,
         )
         self.page.click(self.customer_form + "a[onclick='enviarUserForm()']")
-        self.page.wait_for_timeout(6000)
+        self.wait_for_answer(self.next_button)
 
     def fill_03_preview(self):
-        self.page.locator(
-            "button:has-text('Siguiente'):visible, a:has-text('Siguiente'):visible"
-        ).first.click()
-        self.page.wait_for_timeout(6000)
-        if not self.page.locator("text=Previsualizar factura").is_visible():
-            raise PortalError("the preview did not open: %s" % self.visible_messages())
+        self.page.locator(self.next_button).first.click()
+        self.wait_for_answer("text=Previsualizar factura")
         # A saved customer skips the form, so the portal may use an old Uso CFDI. Check
         # the receiver in the preview's XML tab and stop on any difference.
         self.page.locator(
             "a:has-text('XML'):visible, li:has-text('XML'):visible"
         ).first.click()
-        self.page.wait_for_timeout(3000)
-        frames = [
-            frame.inner_text("body")
-            for frame in self.page.frames
-            if frame.url != "about:blank"
-        ]
-        xml = " ".join(" ".join(frames).split())
+        xml = ""
+        for _attempt in range(60):
+            frames = [
+                frame.inner_text("body")
+                for frame in self.page.frames
+                if frame.url != "about:blank"
+            ]
+            xml = " ".join(" ".join(frames).split())
+            if "Receptor" in xml:
+                break
+            self.page.wait_for_timeout(500)
         expected = {
             "Rfc": self.receiver.rfc,
             "UsoCFDI": self.args.uso,
@@ -159,19 +166,17 @@ class SoftRestaurant(InvoicePortal):
         self.page.locator(
             "button:has-text('Facturar'):visible, a:has-text('Facturar'):visible"
         ).first.click()
-        self.page.wait_for_timeout(3000)
         # It asks "¿Estás seguro que deseas generar la factura?" in an HTML modal.
-        confirm = self.page.locator(
+        confirm_button = self.page.locator(
             "button:has-text('Aceptar'):visible, a:has-text('Aceptar'):visible"
         )
-        if confirm.count():
-            confirm.last.click()
+        stamping_notice = self.page.locator("text=Facturando...")
+        confirm_button.or_(stamping_notice).first.wait_for(timeout=30000)
+        if confirm_button.count():
+            confirm_button.last.click()
         # Stamping shows "Facturando..." for well over 15 seconds; wait for it to end.
-        self.page.wait_for_timeout(3000)
-        for _ in range(60):
-            if not self.page.locator("text=Facturando...").is_visible():
-                break
-            self.page.wait_for_timeout(2000)
+        stamping_notice.wait_for(timeout=30000)
+        stamping_notice.wait_for(state="hidden", timeout=180000)
         print("RESULT: %s | url %s" % (self.visible_messages(), self.page.url))
 
 

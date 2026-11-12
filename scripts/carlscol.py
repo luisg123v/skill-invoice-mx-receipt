@@ -12,7 +12,8 @@ Usage:
 
 import sys
 
-from portal import InvoicePortal, PortalError
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from portal import InvoicePortal, PortalDone, PortalError
 
 
 class Carlscol(InvoicePortal):
@@ -74,12 +75,18 @@ class Carlscol(InvoicePortal):
 
     def fill_01_ticket(self):
         self.page.goto(self.url, wait_until="networkidle", timeout=90000)
-        self.page.wait_for_timeout(2000)
-        # A slideshow of instructions covers the form.
-        if self.page.is_visible("#btn-slider-modal"):
-            self.page.click("#btn-slider-modal")
-            self.page.wait_for_timeout(1000)
-        self.page.fill(self.field("txt_rfcbusqueda"), self.receiver.rfc)
+        rfc_field = self.field("txt_rfcbusqueda")
+        self.wait_for_answer(rfc_field)
+        # A slideshow of instructions can open over the form a moment later.
+        close_slideshow = self.page.locator("#btn-slider-modal")
+        try:
+            close_slideshow.wait_for(timeout=3000)
+        except PlaywrightTimeoutError:
+            pass
+        if close_slideshow.is_visible():
+            close_slideshow.click()
+            close_slideshow.wait_for(state="hidden")
+        self.page.fill(rfc_field, self.receiver.rfc)
         # The date field is a read-only datepicker; set its value directly.
         self.page.evaluate(
             "value => document.querySelector('%s').value = value"
@@ -91,17 +98,19 @@ class Carlscol(InvoicePortal):
         self.page.select_option(self.field("ddl_sucursales"), self.branch_value())
         self.show([self.field(name) for name in self.ticket_fields], width=40)
         self.page.click(self.field("btn_siguiente"))
-        self.page.wait_for_timeout(5000)
-        self.page.wait_for_load_state("networkidle", timeout=60000)
-        if "transaccion.aspx" not in self.page.url:
+        # A receipt already invoiced goes to historial.aspx instead.
+        try:
+            self.page.wait_for_url("**/{transaccion,historial}.aspx**")
+        except PlaywrightTimeoutError:
             raise PortalError(
                 "the portal did not accept the receipt: %s" % self.text()[:600]
             )
+        if "historial.aspx" in self.page.url:
+            raise PortalDone("already invoiced: %s" % self.text()[:300])
 
     def fill_02_receiver(self):
         # Choosing the regime posts the page back and reloads the Uso CFDI options.
         self.page.select_option(self.field("ddl_regimenfiscal"), self.regime())
-        self.page.wait_for_timeout(3000)
         self.page.wait_for_load_state("networkidle", timeout=60000)
         self.select_offered(self.field("ddl_usocfdiconrfc"), self.args.uso, "Uso CFDI")
         self.page.fill(self.field("txt_razonsocial"), self.receiver.name)
@@ -121,12 +130,11 @@ class Carlscol(InvoicePortal):
             timeout=60000,
         )
         self.page.click(self.field("btn_facturar"))
-        self.page.wait_for_timeout(2000)
-        if not self.page.is_visible("#btn_confirmacionsi"):
-            raise PortalError("no confirmation dialog: %s" % self.text()[:600])
+        self.wait_for_answer("#btn_confirmacionsi")
         print("CONFIRMATION: %s" % self.text("#modal_confirmacion"))
-        self.page.click("#btn_confirmacionsi")
-        self.page.wait_for_timeout(10000)
+        # Confirming posts the page back, and the new page has the result.
+        with self.page.expect_navigation(timeout=120000):
+            self.page.click("#btn_confirmacionsi")
         self.page.wait_for_load_state("networkidle", timeout=90000)
         print("url: %s" % self.page.url)
         print("RESULT: %s" % self.text()[:1200])
