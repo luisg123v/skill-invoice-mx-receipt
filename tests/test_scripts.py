@@ -25,6 +25,7 @@ PORTALS = {
     "farmacias_similares": "FarmaciasSimilares",
     "kiosko": "Kiosko",
     "la_marina": "LaMarina",
+    "la_parisina": "LaParisina",
     "liverpool": "Liverpool",
     "mcdonalds": "McDonalds",
     "miniso": "Miniso",
