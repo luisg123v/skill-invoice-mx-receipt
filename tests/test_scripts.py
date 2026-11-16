@@ -26,6 +26,7 @@ PORTALS = {
     "kiosko": "Kiosko",
     "la_marina": "LaMarina",
     "liverpool": "Liverpool",
+    "mcdonalds": "McDonalds",
     "miniso": "Miniso",
     "oxxo": "Oxxo",
     "soft_restaurant": "SoftRestaurant",
