@@ -171,7 +171,12 @@ class SoftRestaurant(InvoicePortal):
             "button:has-text('Aceptar'):visible, a:has-text('Aceptar'):visible"
         )
         stamping_notice = self.page.locator("text=Facturando...")
-        confirm_button.or_(stamping_notice).first.wait_for(timeout=30000)
+        confirm_or_stamping = (
+            confirm_button.or_(stamping_notice)
+            # The page has the "Facturando..." notice hidden from the start.
+            .filter(visible=True)
+        )
+        confirm_or_stamping.first.wait_for(timeout=30000)
         if confirm_button.count():
             confirm_button.last.click()
         # Stamping shows "Facturando..." for well over 15 seconds; wait for it to end.
