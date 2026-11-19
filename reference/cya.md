@@ -46,5 +46,6 @@ card or a welcomeCard.
 ## How the CFDI arrives
 
 By email from notificaciones_facturacionpr@cyamexico.com ("Factura del ticket <ticket>"), about an
-hour after issuing. Both files come named "attachment", and the XML as `text/plain`, so a program
-that goes by the name or the type doesn't see the XML.
+hour after issuing. Both files come without a file name, so mail programs give them a generic one,
+e.g. "mime-attachment.pdf" and "mime-attachment" on the iPhone. The XML's type is `text/xml`, but
+a program that recognizes files by their name doesn't see it as the CFDI.
