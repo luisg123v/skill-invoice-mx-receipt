@@ -20,6 +20,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 PORTALS = {
     "alsea": "Alsea",
     "carlscol": "Carlscol",
+    "cya": "Cya",
     "cerveceria_de_la_costa": "CerveceriaDeLaCosta",
     "farmacias_guadalajara": "FarmaciasGuadalajara",
     "farmacias_similares": "FarmaciasSimilares",

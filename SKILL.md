@@ -131,6 +131,7 @@ Run any script with `--help` for its arguments.
 | Store | Reference | Script | Blocks IPs outside Mexico |
 |---|---|---|---|
 | Alsea: Starbucks, Domino's, Burger King, Chili's, Vips, ... | [`reference/alsea.md`](reference/alsea.md) | [`alsea.py`](scripts/alsea.py) | no |
+| C&A | [`reference/cya.md`](reference/cya.md) | [`cya.py`](scripts/cya.py) | no |
 | Carlscol (Carl's Jr in Colima and Manzanillo) | [`reference/carlscol.md`](reference/carlscol.md) | [`carlscol.py`](scripts/carlscol.py) | no |
 | Cervecería de la Costa | [`reference/cerveceria-de-la-costa.md`](reference/cerveceria-de-la-costa.md) | [`cerveceria_de_la_costa.py`](scripts/cerveceria_de_la_costa.py) | no |
 | Farmacias Guadalajara | [`reference/farmacias-guadalajara.md`](reference/farmacias-guadalajara.md) | [`farmacias_guadalajara.py`](scripts/farmacias_guadalajara.py) | yes |
