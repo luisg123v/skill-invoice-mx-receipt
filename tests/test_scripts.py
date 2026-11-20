@@ -30,6 +30,7 @@ PORTALS = {
     "liverpool": "Liverpool",
     "mcdonalds": "McDonalds",
     "miniso": "Miniso",
+    "office_depot": "OfficeDepot",
     "oxxo": "Oxxo",
     "soft_restaurant": "SoftRestaurant",
     "template": "Template",

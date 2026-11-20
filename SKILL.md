@@ -144,6 +144,7 @@ Run any script with `--help` for its arguments.
 | Liverpool | [`reference/liverpool.md`](reference/liverpool.md) | [`liverpool.py`](scripts/liverpool.py) | no |
 | McDonald's | [`reference/mcdonalds.md`](reference/mcdonalds.md) | [`mcdonalds.py`](scripts/mcdonalds.py) | no |
 | Miniso (Diverza portal) | [`reference/miniso.md`](reference/miniso.md) | [`miniso.py`](scripts/miniso.py) | no |
+| Office Depot | [`reference/office-depot.md`](reference/office-depot.md) | [`office_depot.py`](scripts/office_depot.py) | yes |
 | OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) | yes |
 | Restaurants on Soft Restaurant, with two portals (mefacturo.com and mefacturo.mx links) | [`reference/soft-restaurant.md`](reference/soft-restaurant.md) | [`soft_restaurant.py`](scripts/soft_restaurant.py) (mefacturo.com only) | no |
 | Walmart | [`reference/walmart.md`](reference/walmart.md) | [`walmart.py`](scripts/walmart.py) | no |
