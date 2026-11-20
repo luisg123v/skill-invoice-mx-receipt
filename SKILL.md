@@ -146,6 +146,7 @@ Run any script with `--help` for its arguments.
 | Miniso (Diverza portal) | [`reference/miniso.md`](reference/miniso.md) | [`miniso.py`](scripts/miniso.py) | no |
 | Office Depot | [`reference/office-depot.md`](reference/office-depot.md) | [`office_depot.py`](scripts/office_depot.py) | yes |
 | OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) | yes |
+| Proscai: Promoda, Mumuso, Aldo Conti, ... | [`reference/proscai.md`](reference/proscai.md) | [`proscai.py`](scripts/proscai.py) | no |
 | Restaurants on Soft Restaurant, with two portals (mefacturo.com and mefacturo.mx links) | [`reference/soft-restaurant.md`](reference/soft-restaurant.md) | [`soft_restaurant.py`](scripts/soft_restaurant.py) (mefacturo.com only) | no |
 | Walmart | [`reference/walmart.md`](reference/walmart.md) | [`walmart.py`](scripts/walmart.py) | no |
 

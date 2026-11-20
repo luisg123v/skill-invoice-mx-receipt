@@ -32,6 +32,7 @@ PORTALS = {
     "miniso": "Miniso",
     "office_depot": "OfficeDepot",
     "oxxo": "Oxxo",
+    "proscai": "Proscai",
     "soft_restaurant": "SoftRestaurant",
     "template": "Template",
     "walmart": "Walmart",
