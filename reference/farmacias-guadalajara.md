@@ -7,7 +7,7 @@
   [`farmacias_guadalajara.py`](../scripts/farmacias_guadalajara.py)
 
 The portal blocks IPs outside Mexico and headless browsers, so the script needs the proxy (see
-"Blocking").
+[the "Proxy" section of SKILL.md](../SKILL.md#proxy)).
 
 ## Where the data is on the receipt
 

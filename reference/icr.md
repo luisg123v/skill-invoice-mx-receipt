@@ -8,7 +8,8 @@
 
 The receipt prints the portal under "Necesita Factura?", along with the email
 `facturacion@icr.mx`. There is no script yet, and what follows comes from a receipt invoiced by
-hand, so explore the portal as "A new portal" in SKILL.md says the first time.
+hand, so the first time, explore the portal as described in
+[the "A new portal" section of SKILL.md](../SKILL.md#a-new-portal).
 
 ## Where the data is on the receipt
 
