@@ -35,6 +35,7 @@ PORTALS = {
     "proscai": "Proscai",
     "soft_restaurant": "SoftRestaurant",
     "template": "Template",
+    "waldos": "Waldos",
     "walmart": "Walmart",
 }
 CONFIG = """

@@ -148,6 +148,7 @@ Run any script with `--help` for its arguments.
 | OXXO | [`reference/oxxo.md`](reference/oxxo.md) | [`oxxo.py`](scripts/oxxo.py) | yes |
 | Proscai: Promoda, Mumuso, Aldo Conti, ... | [`reference/proscai.md`](reference/proscai.md) | [`proscai.py`](scripts/proscai.py) | no |
 | Restaurants on Soft Restaurant, with two portals (mefacturo.com and mefacturo.mx links) | [`reference/soft-restaurant.md`](reference/soft-restaurant.md) | [`soft_restaurant.py`](scripts/soft_restaurant.py) (mefacturo.com only) | no |
+| Waldo's | [`reference/waldos.md`](reference/waldos.md) | [`waldos.py`](scripts/waldos.py) | no |
 | Walmart | [`reference/walmart.md`](reference/walmart.md) | [`walmart.py`](scripts/walmart.py) | no |
 
 ## A new portal
