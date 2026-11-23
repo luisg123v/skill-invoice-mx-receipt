@@ -35,8 +35,10 @@ The portal doesn't list its stores. These are the ones known to have an address 
 An address the portal doesn't know answers "Lo sentimos! La página que estabas buscando no fue
 encontrada."
 
-The key finds the receipt from any store's address, so `--tienda` only changes the logo and the
-evidence folder. Still, pass the store of the receipt.
+It is actually possible to invoice a receipt from any store's address, e.g. a Mumuso receipt from
+Promoda's, because the portal finds the receipt by the key alone. The store passed with `--tienda`
+only changes the logo the page shows and the name of the evidence folder. Still, pass the store of
+the receipt, so that both match it.
 
 ## Where the data is on the receipt
 
