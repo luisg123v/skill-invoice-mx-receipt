@@ -17,6 +17,7 @@ Usage:
 
 import sys
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from portal import InvoicePortal, PortalDone, PortalError, pattern_argument
 
 
@@ -57,11 +58,18 @@ class OfficeDepot(InvoicePortal):
     def ticket(self):
         return self.args.itu
 
+    def expect_response_from(self, endpoint):
+        """Wait, in a `with` block, for the portal's answer to a request to `endpoint`."""
+        return self.page.expect_response(lambda response: endpoint in response.url)
+
     def pick(self, name, code):
         """Pick the option of a menu by its code, e.g. "605" for "605 - Sueldos y..."."""
         self.page.click("mat-select[formcontrolname=%s]" % name)
         options = self.page.locator("mat-option").filter(visible=True)
-        options.first.wait_for(timeout=15000)
+        try:
+            options.first.wait_for(timeout=15000)
+        except PlaywrightTimeoutError:
+            raise PortalError("the menu %s shows no options" % name) from None
         texts = [" ".join(text.split()) for text in options.all_inner_texts()]
         matching = [
             index for index, text in enumerate(texts) if text.split(" - ")[0] == code
@@ -90,7 +98,7 @@ class OfficeDepot(InvoicePortal):
         self.page.fill("input[formcontrolname=amount]", self.args.total)
         # A receipt the portal doesn't find shows no message on the page; only the
         # answer of the validation says so ("Error al validar el ITU").
-        with self.page.expect_response(lambda r: "validateItu" in r.url) as response:
+        with self.expect_response_from("validateItu") as response:
             self.page.click("button:has-text('Validar y Continuar')")
         answer = response.value.json()
         if not answer.get("status"):
@@ -109,14 +117,21 @@ class OfficeDepot(InvoicePortal):
     def fill_02_receiver(self):
         self.page.fill("input[formcontrolname=rfc]", self.receiver.rfc)
         # The button next to the RFC looks it up; the fields below are written either
-        # way.
-        self.page.click(
-            "mat-form-field:has(input[formcontrolname=rfc]) button:has-text('search')"
-        )
-        self.page.wait_for_load_state("networkidle")
-        # The RFC of a person has 13 characters, and a company's 12.
-        person = self.pick("personType", "F" if len(self.receiver.rfc) == 13 else "M")
-        regime = self.pick("fiscalRegime", self.regime())
+        # way. A choice made before its answer arrives can be lost, so the menus are
+        # chosen once it does.
+        with self.expect_response_from("getClientData"):
+            self.page.click(
+                "mat-form-field:has(input[formcontrolname=rfc]) button:has-text('search')"
+            )
+        # Each choice asks the portal for the options of the next menu, which an open
+        # menu doesn't show when they arrive later, so the script waits for them.
+        with self.expect_response_from("getRegimenFiscalList"):
+            # The RFC of a person has 13 characters, and a company's 12.
+            person = self.pick(
+                "personType", "F" if len(self.receiver.rfc) == 13 else "M"
+            )
+        with self.expect_response_from("getUsageTypeList"):
+            regime = self.pick("fiscalRegime", self.regime())
         usage = self.pick("cfdiUse", self.args.uso)
         self.page.fill("input[formcontrolname=zipCode]", self.receiver.postal_code)
         self.page.fill("input[formcontrolname=businessName]", self.receiver.name)
@@ -159,7 +174,7 @@ class OfficeDepot(InvoicePortal):
         # frees the receipt only once that is confirmed.
         dialog = self.page.locator("mat-dialog-container")
         dialog.wait_for(timeout=15000)
-        with self.page.expect_response(lambda r: "deleteItus" in r.url) as response:
+        with self.expect_response_from("deleteItus") as response:
             dialog.get_by_role("button", name="Confirmar").click()
         if not response.value.ok:
             raise PortalError(
