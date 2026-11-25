@@ -32,7 +32,8 @@ Validating a receipt reserves it for that browser for half an hour. Another brow
 in that time gets `FES002-ITU NO DISPONIBLE`, even from the same IP. To free it, "Salir" asks
 "¿Deseas cancelar el proceso de facturación?", and "Confirmar" frees the receipt. The dry run does
 both before closing the browser, so the next run can validate the receipt right away. A run that
-stops before that, e.g. on an error, leaves the receipt reserved for the half hour.
+fails after the validation does both too. If they fail as well, the receipt stays reserved for the
+half hour.
 
 ## Known answers
 

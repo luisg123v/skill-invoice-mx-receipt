@@ -7,7 +7,8 @@
 The portal asks for the receipt's ITU, the 30 characters printed at its foot, and its
 total. Once validated, it keeps the receipt "in use" for half an hour, and answers
 another browser that tries it "FES002-ITU NO DISPONIBLE". So the dry run leaves the
-form with "Salir" and confirms it, which frees the receipt for the next run.
+form with "Salir" and confirms it, which frees the receipt for the next run. A run that
+fails after the validation does the same.
 
 Usage:
     office_depot.py --itu 2026111700123011000123456ABCD1 --total 100.00 --uso S01 \
@@ -37,6 +38,9 @@ class OfficeDepot(InvoicePortal):
         "input[formcontrolname=businessName]",
         "input[formcontrolname=email]",
     ]
+    # Whether the portal keeps the receipt for this browser, from its validation until
+    # it is freed or invoiced.
+    in_use = False
 
     @classmethod
     def add_arguments(cls, parser):
@@ -100,6 +104,7 @@ class OfficeDepot(InvoicePortal):
         )
         if not receiver_form.count():
             raise PortalDone("already invoiced: %s" % self.text()[:300])
+        self.in_use = True
 
     def fill_02_receiver(self):
         self.page.fill("input[formcontrolname=rfc]", self.receiver.rfc)
@@ -123,6 +128,30 @@ class OfficeDepot(InvoicePortal):
         if not self.args.send:
             self.release()
 
+    def run_steps(self, prefix):
+        """Run the steps, and leave the form when one of them fails.
+
+        Otherwise the portal would keep the receipt in use for half an hour.
+        """
+        try:
+            return super().run_steps(prefix)
+        except Exception:
+            if self.in_use:
+                self.release_after_failure()
+            raise
+
+    def release_after_failure(self):
+        """Try to free the receipt, without hiding the error that stopped the run."""
+        try:
+            # A menu left open covers the page, and "Salir" with it.
+            self.page.keyboard.press("Escape")
+            self.release()
+        except Exception as error:
+            print(
+                "failed to free the receipt, so it stays in use for half an hour: %s"
+                % error
+            )
+
     def release(self):
         """Leave the form, so that the portal stops keeping the receipt in use."""
         self.page.click("button:has-text('Salir')")
@@ -137,6 +166,7 @@ class OfficeDepot(InvoicePortal):
                 "the portal didn't free the receipt (%s); the next run has to wait "
                 "half an hour" % response.value.status
             )
+        self.in_use = False
         print("receipt freed for the next run")
 
     def submit_01_invoice(self):
@@ -153,6 +183,7 @@ class OfficeDepot(InvoicePortal):
             self.page.wait_for_timeout(500)
         else:
             raise PortalError("the portal didn't answer: %s" % self.text()[:600])
+        self.in_use = False
         print("RESULT: %s" % self.text()[:1200])
 
 
